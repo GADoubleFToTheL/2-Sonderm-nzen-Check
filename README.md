@@ -1,6 +1,6 @@
-# 2€-Sondermünzen-Check
+# Münzalbum
 
-Handy-App zum Nachkontrollieren, welche Euro-Sondermünzen man schon hat. Alle Münzen sind hinterlegt,
+Handy-App zum Nachkontrollieren, welche Euro-Münzen man schon hat. Alle Münzen sind hinterlegt,
 man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
 
 - **Vier Münzarten** (Leiste unten): **2 €** Gedenkmünzen aller Euro-Länder, **5 €** Kupfermünzen und
@@ -22,6 +22,9 @@ man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
 Das Design folgt dem der eigenen Arbeits-Tools: dunkles Farbsystem mit Blau→Cyan-Akzent, Glas-Flächen, abgerundete Ecken,
 feines Raster im Hintergrund. Alle Farben, Radien und Schatten stehen als Variablen am Anfang von
 `app/style.css`. Es gibt nur diese eine dunkle Fassung.
+
+App-Icon: eine 2-€-Münze (Silberring, goldener Kern) mit Häkchen, Vorlage `app/icons/icon.svg`. Die PNG-Größen
+(192, 512, 180 für iPhone, 512 „maskable“ mit 20 % Rand für Android) sind daraus gerendert.
 
 ## Aufs Handy bringen
 

@@ -567,7 +567,7 @@
     const blob = new Blob([JSON.stringify(payload, null, 1)], { type: 'application/json' });
     const file = new File([blob], name, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: '2€ Sondermünzen – Sicherung' }); return; }
+      try { await navigator.share({ files: [file], title: 'Münzalbum – Sicherung' }); return; }
       catch (e) { if (e.name === 'AbortError') return; }
     }
     const a = el('a');
