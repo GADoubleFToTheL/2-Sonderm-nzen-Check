@@ -151,6 +151,28 @@ ul { list-style: none; margin: 0; padding: 0; }
 .medal b { font: 700 13px/1 system-ui, sans-serif; color: #333; }
 .coin input:checked ~ .medal { filter: none; }
 
+/* Münzen mit Prägestätten (Deutschland: A, D, F, G, J) */
+.coin.multi { align-items: flex-start; }
+.coin.multi .medal { margin-top: 2px; }
+.coin.multi.complete .medal { filter: none; }
+.coin.multi.partial .medal { filter: grayscale(.5) opacity(.85); }
+.mints { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.mint {
+  min-width: 42px; height: 36px; padding: 0 8px;
+  border-radius: 10px; border: 2px solid var(--line);
+  background: transparent; color: var(--muted);
+  font-weight: 700; font-size: 14px;
+}
+.mint[aria-pressed="true"] { background: var(--ok); border-color: var(--ok); color: #fff; }
+.all {
+  flex: none; align-self: center; min-width: 46px; height: 32px; padding: 0 8px;
+  border-radius: 16px; border: 2px solid var(--line);
+  background: transparent; color: var(--muted);
+  font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums;
+}
+.coin.partial .all { border-color: var(--gold); color: var(--text); }
+.coin.complete .all { background: var(--ok); border-color: var(--ok); color: #fff; }
+
 .info { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .title { font-weight: 600; font-size: 15.5px; overflow-wrap: anywhere; }
 .meta { font-size: 13px; color: var(--muted); }

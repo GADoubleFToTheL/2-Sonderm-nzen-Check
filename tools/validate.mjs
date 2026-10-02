@@ -26,6 +26,12 @@ const countries = data.countries ?? {};
 for (const [code, c] of Object.entries(countries)) {
   if (!/^[A-Z]{2}$/.test(code)) err(`Ländercode „${code}“ ist ungültig.`);
   if (!c.n || !c.f) err(`Land ${code}: Name („n“) und Flagge („f“) sind Pflicht.`);
+  // Optional: Prägestätten – dann gibt es jede Münze dieses Landes in allen genannten Varianten.
+  if (c.mm !== undefined) {
+    const ok = c.mm && typeof c.mm === 'object' && Object.keys(c.mm).length > 0
+      && Object.entries(c.mm).every(([k, v]) => /^[A-Z]$/.test(k) && typeof v === 'string' && v.trim());
+    if (!ok) err(`Land ${code}: „mm“ muss wie {"A": "Berlin", "D": "München"} aussehen.`);
+  }
 }
 
 const ALLOWED_KEYS = new Set(['id', 'c', 'y', 'm', 't', 'g', 'u']);
@@ -68,7 +74,8 @@ for (const [k, n] of perCountryYear) {
 }
 
 const unverified = data.coins.filter((c) => c.u).map((c) => c.id);
-console.log(`Münzen: ${data.coins.length} · Länder: ${Object.keys(countries).length} · Stand: ${data.updated}`);
+const units = data.coins.reduce((n, c) => n + (countries[c.c]?.mm ? Object.keys(countries[c.c].mm).length : 1), 0);
+console.log(`Münzen: ${data.coins.length} (${units} Stück inkl. Prägestätten) · Länder: ${Object.keys(countries).length} · Stand: ${data.updated}`);
 console.log('Je Jahr:', [...byYear].sort((a, b) => a[0] - b[0]).map(([y, n]) => `${y}:${n}`).join(' '));
 console.log('Je Land:', [...byCountry].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c}:${n}`).join(' '));
 if (unverified.length) console.log(`Als „ungeprüft“ markiert (${unverified.length}): ${unverified.join(', ')}`);

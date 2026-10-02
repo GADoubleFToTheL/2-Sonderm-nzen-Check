@@ -4,7 +4,7 @@
     "AT": {"n": "Österreich", "f": "🇦🇹"},
     "BE": {"n": "Belgien", "f": "🇧🇪"},
     "CY": {"n": "Zypern", "f": "🇨🇾"},
-    "DE": {"n": "Deutschland", "f": "🇩🇪"},
+    "DE": {"n": "Deutschland", "f": "🇩🇪", "mm": {"A": "Berlin", "D": "München", "F": "Stuttgart", "G": "Karlsruhe", "J": "Hamburg"}},
     "EE": {"n": "Estland", "f": "🇪🇪"},
     "ES": {"n": "Spanien", "f": "🇪🇸"},
     "FI": {"n": "Finnland", "f": "🇫🇮"},

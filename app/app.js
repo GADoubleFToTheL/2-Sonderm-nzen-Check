@@ -42,6 +42,7 @@
   const state = {
     base: null,
     coins: [],
+    byId: new Map(),
     countries: {},
     updated: '',
     custom: store.get(KEY.custom, []),
@@ -67,11 +68,20 @@
       && d.coins.every((c) => c && typeof c.id === 'string' && d.countries[c.c] && Number.isInteger(c.y) && typeof c.t === 'string');
   }
 
+  // Jede Münze besteht aus einer oder mehreren „Einheiten“, die einzeln abgehakt werden:
+  // normalerweise eine, bei Ländern mit Prägestätten (Deutschland: A, D, F, G, J) je Prägestätte eine.
+  const unitIds = (c) => (c.units ? c.units.map((u) => u.id) : [c.id]);
+  const unitCount = (c) => (c.units ? c.units.length : 1);
+  const ownedCount = (c) => unitIds(c).reduce((n, id) => n + (state.owned.has(id) ? 1 : 0), 0);
+
   function toCoin(c, countries) {
     const country = countries[c.c];
     const month = c.m ? MONTHS[c.m - 1] : '';
+    const units = country.mm && !c.custom
+      ? Object.entries(country.mm).map(([mark, city]) => ({ id: `${c.id}@${mark}`, mark, city }))
+      : null;
     return {
-      id: c.id, c: c.c, y: c.y, m: c.m || 0, t: c.t,
+      id: c.id, c: c.c, y: c.y, m: c.m || 0, t: c.t, units,
       g: c.g === 1, u: c.u === 1, custom: c.custom === true,
       flag: country.f, countryName: country.n,
       when: month ? `${month} ${c.y}` : String(c.y),
@@ -91,6 +101,18 @@
     const { countries, coins } = state.base;
     const own = state.custom.filter((c) => countries[c.c]).map((c) => ({ ...c, custom: true }));
     state.coins = coins.concat(own).map((c) => toCoin(c, countries));
+    state.byId = new Map(state.coins.map((c) => [c.id, c]));
+
+    // Ältere Häkchen auf der ganzen Münze (ohne Prägestätte) gelten für alle Prägestätten.
+    let migrated = false;
+    for (const c of state.coins) {
+      if (c.units && state.owned.has(c.id)) {
+        c.units.forEach((u) => state.owned.add(u.id));
+        state.owned.delete(c.id);
+        migrated = true;
+      }
+    }
+    if (migrated) store.set(KEY.owned, [...state.owned]);
 
     const ids = coins.map((c) => c.id);
     if (state.seen === null) {
@@ -135,8 +157,8 @@
     for (const c of state.coins) {
       const k = keyFn(c);
       const s = map.get(k) || { n: 0, own: 0 };
-      s.n++;
-      if (state.owned.has(c.id)) s.own++;
+      s.n += unitCount(c);
+      s.own += ownedCount(c);
       map.set(k, s);
     }
     return map;
@@ -144,9 +166,9 @@
 
   function matches(c) {
     const p = state.prefs;
-    const has = state.owned.has(c.id);
-    if (p.filter === 'missing' && has) return false;
-    if (p.filter === 'owned' && !has) return false;
+    const have = ownedCount(c);
+    if (p.filter === 'missing' && have === unitCount(c)) return false;
+    if (p.filter === 'owned' && have === 0) return false;
     if (p.filter === 'new' && !state.newIds.has(c.id)) return false;
     if (p.country && c.c !== p.country) return false;
     if (p.year && String(c.y) !== p.year) return false;
@@ -155,7 +177,58 @@
     return true;
   }
 
+  function metaFor(c) {
+    const byCountry = state.prefs.group === 'country';
+    const meta = el('span', 'meta', byCountry ? c.when : `${c.countryName} · ${c.when}`);
+    if (c.g) meta.append(el('span', 'tag', 'Gemeinsam'));
+    if (c.u) meta.append(el('span', 'tag tag-u', 'ungeprüft'));
+    if (c.custom) meta.append(el('span', 'tag tag-own', 'Eigene'));
+    return meta;
+  }
+
+  // Münze mit Prägestätten: ein Schalter je Prägestätte, rechts „alle“.
+  function multiRow(c) {
+    const li = el('li');
+    const row = el('div', 'coin multi');
+    row.dataset.coin = c.id;
+    const info = el('span', 'info');
+    info.append(el('span', 'title', c.t), metaFor(c));
+    const mints = el('span', 'mints');
+    mints.setAttribute('role', 'group');
+    mints.setAttribute('aria-label', 'Prägestätten');
+    for (const u of c.units) {
+      const b = el('button', 'mint', u.mark);
+      b.type = 'button';
+      b.dataset.unit = u.id;
+      b.title = u.city;
+      b.setAttribute('aria-label', `Prägestätte ${u.mark} (${u.city})`);
+      mints.append(b);
+    }
+    info.append(mints);
+    const all = el('button', 'all');
+    all.type = 'button';
+    all.dataset.all = c.id;
+    row.append(el('span', 'medal', c.flag), info);
+    if (state.newIds.has(c.id)) row.append(el('span', 'badge-new', 'NEU'));
+    row.append(all);
+    li.append(row);
+    paintMulti(row, c);
+    return li;
+  }
+
+  function paintMulti(row, c) {
+    const n = ownedCount(c);
+    const full = n === c.units.length;
+    row.classList.toggle('complete', full);
+    row.classList.toggle('partial', n > 0 && !full);
+    const all = row.querySelector('.all');
+    all.textContent = full ? '✓' : `${n}/${c.units.length}`;
+    all.setAttribute('aria-label', full ? 'Alle Prägestätten abwählen' : 'Alle Prägestätten abhaken');
+    row.querySelectorAll('.mint').forEach((b) => b.setAttribute('aria-pressed', String(state.owned.has(b.dataset.unit))));
+  }
+
   function coinRow(c) {
+    if (c.units) return multiRow(c);
     const li = el('li');
     const label = el('label', 'coin');
     const input = el('input');
@@ -165,13 +238,7 @@
 
     const medal = el('span', 'medal', c.flag);
     const info = el('span', 'info');
-    info.append(el('span', 'title', c.t));
-    const byCountry = state.prefs.group === 'country';
-    const meta = el('span', 'meta', byCountry ? c.when : `${c.countryName} · ${c.when}`);
-    if (c.g) meta.append(el('span', 'tag', 'Gemeinsam'));
-    if (c.u) meta.append(el('span', 'tag tag-u', 'ungeprüft'));
-    if (c.custom) meta.append(el('span', 'tag tag-own', 'Eigene'));
-    info.append(meta);
+    info.append(el('span', 'title', c.t), metaFor(c));
 
     label.append(input, medal, info);
     if (state.newIds.has(c.id)) label.append(el('span', 'badge-new', 'NEU'));
@@ -230,8 +297,8 @@
   }
 
   function updateCounts() {
-    const total = state.coins.length;
-    const own = state.coins.reduce((n, c) => n + (state.owned.has(c.id) ? 1 : 0), 0);
+    const total = state.coins.reduce((n, c) => n + unitCount(c), 0);
+    const own = state.coins.reduce((n, c) => n + ownedCount(c), 0);
     const pct = total ? Math.round((own / total) * 100) : 0;
     ui.progressText.textContent = `${own} / ${total}`;
     ui.barFill.style.width = `${pct}%`;
@@ -256,7 +323,9 @@
   function updateMenuInfo() {
     const d = state.updated ? new Date(state.updated).toLocaleDateString('de-DE') : '–';
     const own = state.custom.length ? ` (davon ${state.custom.length} eigene)` : '';
-    ui.menuInfo.textContent = `Liste vom ${d} · ${state.coins.length} Münzen${own}`;
+    const units = state.coins.reduce((n, c) => n + unitCount(c), 0);
+    const mints = units !== state.coins.length ? ` · ${units} Stück inkl. Prägestätten` : '';
+    ui.menuInfo.textContent = `Liste vom ${d} · ${state.coins.length} Münzen${own}${mints}`;
   }
 
   function buildSelects() {
@@ -335,7 +404,7 @@
       if (data.app !== 'euro2-sondermuenzen' || !Array.isArray(data.owned) || !data.owned.every((x) => typeof x === 'string')) {
         throw new Error('Format');
       }
-      const known = new Set(state.coins.map((c) => c.id));
+      const known = new Set(state.coins.flatMap((c) => [c.id, ...unitIds(c)]));
       const haveCustom = new Set(state.custom.map((c) => c.id));
       const custom = (Array.isArray(data.custom) ? data.custom : []).filter((c) => c && typeof c.id === 'string'
         && state.countries[c.c] && Number.isInteger(c.y) && typeof c.t === 'string' && !haveCustom.has(c.id));
@@ -360,6 +429,29 @@
     if (input.checked) state.owned.add(input.dataset.id);
     else state.owned.delete(input.dataset.id);
     store.set(KEY.owned, [...state.owned]);
+    updateCounts();
+    if (navigator.vibrate) navigator.vibrate(8);
+  });
+
+  // Prägestätten-Schalter und „alle“-Knopf bei Münzen mit mehreren Prägestätten.
+  ui.list.addEventListener('click', (e) => {
+    const mint = e.target.closest('button.mint');
+    const all = e.target.closest('button.all');
+    if (!mint && !all) return;
+    const row = e.target.closest('.coin.multi');
+    const coin = row && state.byId.get(row.dataset.coin);
+    if (!coin) return;
+    if (mint) {
+      const id = mint.dataset.unit;
+      if (state.owned.has(id)) state.owned.delete(id);
+      else state.owned.add(id);
+    } else if (ownedCount(coin) === coin.units.length) {
+      coin.units.forEach((u) => state.owned.delete(u.id));
+    } else {
+      coin.units.forEach((u) => state.owned.add(u.id));
+    }
+    store.set(KEY.owned, [...state.owned]);
+    paintMulti(row, coin);
     updateCounts();
     if (navigator.vibrate) navigator.vibrate(8);
   });
