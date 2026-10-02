@@ -96,8 +96,13 @@
     <form id="addForm" method="dialog">
       <h2>Münze hinzufügen</h2>
       <p class="muted">Fehlt eine Münze in der Liste? Trag sie hier ein. Sie wird nur auf diesem Gerät gespeichert und mit der Sicherung gesichert.</p>
+      <select id="addCat" aria-label="Münzart">
+        <option value="2">2 € Sondermünze</option>
+        <option value="5">5 € Kupfermünze</option>
+        <option value="25">25 € Silber-Niob-Münze</option>
+      </select>
       <select id="addCountry" required aria-label="Land"></select>
-      <input id="addYear" type="number" inputmode="numeric" min="2004" max="2100" placeholder="Jahr (z. B. 2019)" required>
+      <input id="addYear" type="number" inputmode="numeric" min="2002" max="2100" placeholder="Jahr (z. B. 2019)" required>
       <input id="addTitle" type="text" maxlength="120" placeholder="Motiv, z. B. 70 Jahre Bundesrat" required>
       <label class="check"><input type="checkbox" id="addOwned" checked> Hab ich schon</label>
       <button class="primary" value="ok">Hinzufügen</button>
@@ -112,6 +117,18 @@
       <button value="no">Abbrechen</button>
     </form>
   </dialog>
+
+  <nav class="tabbar" id="tabbar" aria-label="Münzart">
+    <button class="tab" data-cat="2" aria-pressed="true">
+      <span class="ic">2 €</span><span class="tx"><b>Länder</b><small></small></span><i class="dot" hidden></i>
+    </button>
+    <button class="tab" data-cat="5" aria-pressed="false">
+      <span class="ic">5 €</span><span class="tx"><b>Kupfer</b><small></small></span><i class="dot" hidden></i>
+    </button>
+    <button class="tab" data-cat="25" aria-pressed="false">
+      <span class="ic">25 €</span><span class="tx"><b>Niob</b><small></small></span><i class="dot" hidden></i>
+    </button>
+  </nav>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

@@ -18,6 +18,17 @@ Quellen, in dieser Reihenfolge:
    abgelehnt: dann warten und es später erneut versuchen).
 3. **Amtsblatt der EU** („Neue nationale Seite von Euro-Umlaufmünzen“) für angekündigte Münzen.
 
+**5 € Kupfer und 25 € Silber-Niob (Münze Österreich, Feld `k`):** Zusätzlich auf neue Ausgaben prüfen:
+`https://www.geldmarie.at/gold/kupfermünzen-5-und-10-euro-österreich.html` (5 € mit Ausgabedatum),
+`https://www.geldmarie.at/gold/silber-niob-25-euro-preise.html` (25 € mit Jahr und Motiv) und die Seiten der
+Münze Österreich (`https://www.muenzeoesterreich.at/sammeln/euro-muenzen/5-euro-muenzen`,
+`.../sammlermuenzen/silber-niob-muenzen`). Eintragen mit `"k": 5` bzw. `"k": 25`, ID `AT-<Jahrgang>-<k>-<name>`.
+`y` = Jahrgang auf der Münze; `m` nur setzen, wenn das Ausgabejahr gleich dem Jahrgang ist (Neujahrsmünzen
+erscheinen im Dezember davor, dann ohne `m`). Normalerweise erscheinen zwei 5-€-Kupfermünzen pro Jahr (Neujahrs- und
+Ostermünze, gelegentlich eine dritte) und eine 25-€-Silber-Niob-Münze. Nur bereits **ausgegebene** Münzen eintragen
+(Ausgabedatum erreicht). 10-€-Kupfermünzen, Silber- und Goldmünzen gehören nicht in die Liste. Fotos gibt es für
+diese Münzarten nicht (Bilder der Münze Österreich sind urheberrechtlich geschützt), `i` weglassen.
+
 Abgleich mit `coins.json`: nach **Land + Jahr + Motiv** vergleichen (Titel in der Liste sind deutsch, die EZB-Seite
 ist englisch). Eine Münze gilt als „schon drin“, wenn Land, Jahr und Motiv zusammenpassen, auch bei anderer
 Wortwahl. Nie eine Münze doppelt anlegen.

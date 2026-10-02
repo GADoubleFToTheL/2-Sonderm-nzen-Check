@@ -1,8 +1,10 @@
 # 2€-Sondermünzen-Check
 
-Handy-App zum Nachkontrollieren, welche 2-Euro-Gedenkmünzen man schon hat. Alle Münzen sind hinterlegt,
+Handy-App zum Nachkontrollieren, welche Euro-Sondermünzen man schon hat. Alle Münzen sind hinterlegt,
 man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
 
+- **Drei Münzarten** (Leiste unten): **2 €** Gedenkmünzen aller Euro-Länder, **5 €** Kupfermünzen und
+  **25 €** Silber-Niob-Münzen der Münze Österreich. Jede Münzart hat ihren eigenen Zähler.
 - **Alle 2€-Sondermünzen** von 2004 bis heute (24 Länder, inkl. Andorra, Monaco, San Marino, Vatikan)
 - **Motiv jeder Münze als Foto** (antippen = vergrößern), dazu der Ausgabemonat
 - **Abhaken** mit einem Tipp, Fortschrittsanzeige gesamt und je Jahr/Land
@@ -79,6 +81,7 @@ Die ganze Münzliste steht in **`app/data/coins.json`** – eine Münze pro Zeil
 | `m` | Ausgabemonat (1–12), optional |
 | `u` | `1` = Angaben noch nicht bestätigt (wird in der App als „ungeprüft“ angezeigt) |
 | `i` | `1` = es gibt ein Münzbild (siehe unten) |
+| `k` | Münzart: fehlt = 2 €, `5` = 5-€-Kupfermünze, `25` = 25-€-Silber-Niob-Münze. Die ID enthält dann die Münzart, z. B. `AT-2012-5-musikverein`. `y` ist der Jahrgang auf der Münze; `m` nur, wenn das Ausgabejahr gleich dem Jahrgang ist (Neujahrsmünzen erscheinen im Dezember davor). |
 
 **Prägestätten:** Bei einem Land mit Prägestätten steht unter `countries` zusätzlich `"mm"`, z. B. bei Deutschland
 `"mm": {"A": "Berlin", "D": "München", ...}`. Dann gibt es *jede* Münze dieses Landes in allen genannten
@@ -104,8 +107,8 @@ Wird ein Land neu aufgenommen (z. B. Bulgarien, sobald es eine Gedenkmünze gibt
 
 ## Wie verlässlich ist die Liste?
 
-**Stand der Liste: 2. Oktober 2026 – 621 Münzen** (761 Stück, weil jede der 35 deutschen Münzen in fünf
-Prägestätten vorliegt).
+**Stand der Liste: 2. Oktober 2026 – 677 Münzen** (621 × 2 €, 32 × 5 €, 24 × 25 €; 817 Stück, weil jede der
+35 deutschen 2-€-Münzen in fünf Prägestätten vorliegt).
 
 - **2004–2025 (584 Münzen):** Gegen die amtlichen Jahresseiten der Europäischen Zentralbank abgeglichen
   (ecb.europa.eu/euro/coins/comm): Land, Jahr, Anzahl und Motiv jeder nationalen Münze stimmen überein, die
@@ -114,7 +117,14 @@ Prägestätten vorliegt).
 - **2026 (37 Münzen):** Die EZB hat für 2026 noch keine Seite. Diese Einträge stammen aus Pressemeldungen und
   sind **nicht amtlich geprüft** und noch **ohne Foto** (dort steht die Landesflagge). Sobald die EZB das
   Jahr 2026 veröffentlicht, lässt sich das nachholen.
-- Noch **nicht enthalten**: Österreich „Beethoven“ (Ausgabe 2027; Proof-Ausgabe ab 2.12.2026), Andorra 2026
+- **5 € Kupfer (32 Münzen) und 25 € Silber-Niob (24 Münzen):** Alle österreichischen Ausgaben seit der ersten
+  5-€-Kupfermünze (Ausgabe 14.12.2011, Jahrgang 2012) bzw. seit 2003 (25 €). Quelle für Titel, Jahrgang und
+  Ausgabedatum: die Übersichten auf geldmarie.at, abgeglichen mit dem Katalog der Münze Österreich
+  (muenzeoesterreich.at). Für diese Münzarten gibt es **noch keine Fotos**, weil die Bilder der Münze
+  Österreich nicht frei verwendbar sind; stattdessen steht eine Wert-Kachel. Eigene Fotos lassen sich mit
+  `tools/make-image.py` einbinden. **Nicht enthalten**: 10-€-Kupfermünzen, Silber-/Goldmünzen, die
+  Neujahrsmünze 2027 (Ausgabe 2.12.2026).
+- Noch **nicht enthalten** (2 €): Österreich „Beethoven“ (Ausgabe 2027; Proof-Ausgabe ab 2.12.2026), Andorra 2026
   (zwei Münzen, Motive noch nicht bekannt), Bulgarien (die geplante Gedenkmünze wurde blockiert).
 - **Prägestätten:** Die EZB-Beschreibungen nennen für die meisten deutschen Münzen ausdrücklich alle fünf
   Prägestätten (A, D, F, G, J). Bei den übrigen steht dazu nichts, es gilt dieselbe Annahme. Andere Länder

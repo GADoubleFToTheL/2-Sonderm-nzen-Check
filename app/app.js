@@ -13,6 +13,13 @@
   const SYNC_EVERY_MS = 30 * 60 * 1000;
   const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
+  // Münzarten: 2 € (Gedenkmünzen aller Euro-Länder), 5 € (Kupfermünzen) und 25 € (Silber-Niob), beide aus Österreich.
+  const CATS = [
+    { k: 2, label: '2 €', name: 'Sondermünzen' },
+    { k: 5, label: '5 €', name: 'Kupfer' },
+    { k: 25, label: '25 €', name: 'Silber-Niob' },
+  ];
+
   const $ = (sel) => document.querySelector(sel);
   const el = (tag, cls, text) => {
     const n = document.createElement(tag);
@@ -62,11 +69,13 @@
     owned: new Set(store.get(KEY.owned, [])),
     seen: store.get(KEY.seen, null) && new Set(store.get(KEY.seen, [])),
     newIds: new Set(),
-    prefs: Object.assign({ filter: 'all', country: '', year: '', group: 'year', q: '' }, store.get(KEY.prefs, {})),
+    prefs: Object.assign({ filter: 'all', country: '', year: '', group: 'year', q: '', cat: 2 }, store.get(KEY.prefs, {})),
   };
 
+  if (!CATS.some((c) => c.k === state.prefs.cat)) state.prefs.cat = 2;
+
   const ui = {
-    list: $('#list'), search: $('#search'), chips: $('#chips'), chipNew: $('#chipNew'),
+    tabbar: $('#tabbar'), list: $('#list'), search: $('#search'), chips: $('#chips'), chipNew: $('#chipNew'),
     country: $('#country'), year: $('#year'), group: $('#group'),
     filters: $('#filters'), filterBtn: $('#filterBtn'), filterDot: $('#filterDot'),
     progressText: $('#progressText'), bar: $('#bar'), barFill: $('#barFill'),
@@ -90,11 +99,11 @@
   function toCoin(c, countries) {
     const country = countries[c.c];
     const month = c.m ? MONTHS[c.m - 1] : '';
-    const units = country.mm && !c.custom
+    const units = country.mm && !c.custom && !c.k
       ? Object.entries(country.mm).map(([mark, city]) => ({ id: `${c.id}@${mark}`, mark, city }))
       : null;
     return {
-      id: c.id, c: c.c, y: c.y, m: c.m || 0, t: c.t, units,
+      id: c.id, c: c.c, y: c.y, m: c.m || 0, t: c.t, units, k: c.k || 2,
       g: c.g === 1, u: c.u === 1, custom: c.custom === true, img: c.i === 1,
       flag: country.f, countryName: country.n,
       when: month ? `${month} ${c.y}` : String(c.y),
@@ -165,9 +174,15 @@
 
   /* ---------- Anzeige ---------- */
 
+  const inCat = (c) => c.k === state.prefs.cat;
+  // Gibt es in der Münzart nur ein Land (5 € und 25 €: Österreich), entfällt die Gruppierung „Je Land“.
+  let singleCountry = false;
+  let searchPending = false;
+  const groupMode = () => (singleCountry ? 'year' : state.prefs.group);
+
   function groupStats(keyFn) {
     const map = new Map();
-    for (const c of state.coins) {
+    for (const c of state.coins.filter(inCat)) {
       const k = keyFn(c);
       const s = map.get(k) || { n: 0, own: 0 };
       s.n += unitCount(c);
@@ -179,6 +194,7 @@
 
   function matches(c) {
     const p = state.prefs;
+    if (!inCat(c)) return false;
     const have = ownedCount(c);
     if (p.filter === 'missing' && have === unitCount(c)) return false;
     if (p.filter === 'owned' && have === 0) return false;
@@ -191,7 +207,7 @@
   }
 
   function metaFor(c) {
-    const byCountry = state.prefs.group === 'country';
+    const byCountry = groupMode() === 'country';
     const meta = el('span', 'meta', byCountry ? c.when : `${c.countryName} · ${c.when}`);
     if (c.g) meta.append(el('span', 'tag', 'Gemeinsam'));
     if (c.u) meta.append(el('span', 'tag tag-u', 'ungeprüft'));
@@ -211,7 +227,12 @@
 
   // Rundes Münzbild (antippen = vergrößern); ohne Bild die Landesflagge.
   function medalFor(c) {
-    if (!c.img || (HOST && !spriteAt('t', c.id))) return el('span', 'medal', c.flag);
+    if (!c.img || (HOST && !spriteAt('t', c.id))) {
+      if (c.k === 2) return el('span', 'medal', c.flag);
+      const m = el('span', `medal denom d${c.k}`);   // ohne Foto: Wert-Kachel in der Farbe der Münzart
+      m.append(el('b', null, `${c.k} €`), el('span', 'flag-badge', c.flag));
+      return m;
+    }
     const b = el('button', 'medal img');
     b.type = 'button';
     b.dataset.zoom = c.id;
@@ -303,7 +324,7 @@
 
   function render() {
     const p = state.prefs;
-    const byYear = p.group === 'year';
+    const byYear = groupMode() === 'year';
     const coins = state.coins.filter(matches);
 
     const countryOrder = (a, b) => a.countryName.localeCompare(b.countryName, 'de');
@@ -343,28 +364,44 @@
     syncControls();
   }
 
+  function catStats() {
+    const stats = new Map(CATS.map((c) => [c.k, { n: 0, own: 0 }]));
+    for (const c of state.coins) {
+      const s = stats.get(c.k);
+      if (s) { s.n += unitCount(c); s.own += ownedCount(c); }
+    }
+    return stats;
+  }
+
   function updateCounts() {
-    const total = state.coins.reduce((n, c) => n + unitCount(c), 0);
-    const own = state.coins.reduce((n, c) => n + ownedCount(c), 0);
+    const stats = catStats();
+    const { n: total, own } = stats.get(state.prefs.cat);
+    for (const c of CATS) {
+      const s = stats.get(c.k);
+      ui.tabbar.querySelector(`.tab[data-cat="${c.k}"] small`).textContent = `${s.own} / ${s.n}`;
+    }
     const pct = total ? Math.round((own / total) * 100) : 0;
     ui.progressText.textContent = `${own} / ${total}`;
     ui.barFill.style.width = `${pct}%`;
     ui.bar.setAttribute('aria-valuenow', String(pct));
 
-    const byYear = state.prefs.group === 'year';
-    const stats = groupStats((c) => (byYear ? c.y : c.c));
+    const byYear = groupMode() === 'year';
+    const groups = groupStats((c) => (byYear ? c.y : c.c));
     ui.list.querySelectorAll('[data-gk]').forEach((node) => {
-      const s = stats.get(byYear ? Number(node.dataset.gk) : node.dataset.gk);
+      const s = groups.get(byYear ? Number(node.dataset.gk) : node.dataset.gk);
       if (s) node.textContent = `${s.own} / ${s.n}`;
     });
   }
 
   function updateBanner() {
     const n = state.newIds.size;
-    ui.chipNew.hidden = n === 0;
+    const newIn = (k) => [...state.newIds].filter((id) => state.byId.get(id)?.k === k).length;
+    const here = newIn(state.prefs.cat);
+    ui.chipNew.hidden = here === 0;
     ui.banner.hidden = n === 0;
+    for (const c of CATS) ui.tabbar.querySelector(`.tab[data-cat="${c.k}"] .dot`).hidden = newIn(c.k) === 0;
     if (n) ui.bannerText.textContent = n === 1 ? '1 neue Münze in der Liste!' : `${n} neue Münzen in der Liste!`;
-    if (!n && state.prefs.filter === 'new') { state.prefs.filter = 'all'; savePrefs(); render(); }
+    if (!here && state.prefs.filter === 'new') { state.prefs.filter = 'all'; savePrefs(); render(); }
   }
 
   function updateMenuInfo() {
@@ -372,15 +409,23 @@
     const own = state.custom.length ? ` (davon ${state.custom.length} eigene)` : '';
     const units = state.coins.reduce((n, c) => n + unitCount(c), 0);
     const mints = units !== state.coins.length ? ` · ${units} Stück inkl. Prägestätten` : '';
-    ui.menuInfo.textContent = `Liste vom ${d} · ${state.coins.length} Münzen${own}${mints}`;
+    const perCat = CATS.map((c) => `${c.label}: ${state.coins.filter((x) => x.k === c.k).length}`).join(' · ');
+    ui.menuInfo.textContent = `Liste vom ${d} · ${state.coins.length} Münzen (${perCat})${own}${mints}`;
   }
 
   function buildSelects() {
+    const inThisCat = state.coins.filter(inCat);
+    const codes = new Set(inThisCat.map((c) => c.c));
+    singleCountry = codes.size <= 1;
+    ui.country.hidden = singleCountry;
+    ui.group.hidden = singleCountry;
     const countries = Object.entries(state.countries)
+      .filter(([k]) => codes.has(k))
       .sort((a, b) => a[1].n.localeCompare(b[1].n, 'de'));
     const fill = (select, firstLabel, groups) => {
       select.replaceChildren(new Option(firstLabel, ''));
       for (const [label, opts] of groups) {
+        if (label && !opts.length) continue;
         const parent = label ? Object.assign(el('optgroup'), { label }) : select;
         for (const [value, text] of opts) parent.append(new Option(text, value));
         if (label) select.append(parent);
@@ -389,20 +434,22 @@
     const eu = countries.filter(([, v]) => !v.s).map(([k, v]) => [k, `${v.f} ${v.n}`]);
     const small = countries.filter(([, v]) => v.s).map(([k, v]) => [k, `${v.f} ${v.n}`]);
     fill(ui.country, 'Alle Länder', [['Euro-Länder', eu], ['Kleinstaaten mit Euro', small]]);
-    const years = [...new Set(state.coins.map((c) => c.y))].sort((a, b) => b - a).map((y) => [String(y), String(y)]);
+    const years = [...new Set(inThisCat.map((c) => c.y))].sort((a, b) => b - a).map((y) => [String(y), String(y)]);
     fill(ui.year, 'Alle Jahre', [['', years]]);
-    if (!state.countries[state.prefs.country]) state.prefs.country = '';
+    if (!codes.has(state.prefs.country)) state.prefs.country = '';
     if (!years.some(([y]) => y === state.prefs.year)) state.prefs.year = '';
   }
 
   function syncControls() {
     const p = state.prefs;
-    ui.search.value = p.q;
+    if (!searchPending) ui.search.value = p.q;   // Eingabe nicht überschreiben, solange sie noch verarbeitet wird
     ui.country.value = p.country;
     ui.year.value = p.year;
     ui.group.value = p.group;
     ui.chips.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === p.filter)));
     ui.filterDot.hidden = !(p.country || p.year);
+    document.documentElement.dataset.cat = String(p.cat);
+    ui.tabbar.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.cat) === p.cat)));
     document.documentElement.style.setProperty('--head-h', `${ui.top.offsetHeight}px`);
   }
 
@@ -474,7 +521,8 @@
       const known = new Set(state.coins.flatMap((c) => [c.id, ...unitIds(c)]));
       const haveCustom = new Set(state.custom.map((c) => c.id));
       const custom = (Array.isArray(data.custom) ? data.custom : []).filter((c) => c && typeof c.id === 'string'
-        && state.countries[c.c] && Number.isInteger(c.y) && typeof c.t === 'string' && !haveCustom.has(c.id));
+        && state.countries[c.c] && Number.isInteger(c.y) && typeof c.t === 'string' && !haveCustom.has(c.id)
+        && (c.k === undefined || c.k === 5 || c.k === 25));
       const fresh = data.owned.filter((id) => (known.has(id) || custom.some((c) => c.id === id)) && !state.owned.has(id)).length;
       if (!(await ask(`${data.owned.length} Münzen in der Sicherung, davon ${fresh} neu für dieses Gerät.\nMit deiner Sammlung zusammenführen?`, 'Zusammenführen'))) return;
       state.custom.push(...custom);
@@ -620,7 +668,8 @@
   let searchTimer;
   ui.search.addEventListener('input', () => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => { state.prefs.q = ui.search.value; savePrefs(); render(); }, 120);
+    searchPending = true;
+    searchTimer = setTimeout(() => { searchPending = false; state.prefs.q = ui.search.value; savePrefs(); render(); }, 120);
   });
 
   ui.chips.addEventListener('click', (e) => {
@@ -644,9 +693,31 @@
     syncControls();
   });
 
+  function setCategory(k) {
+    state.prefs.cat = k;
+    Object.assign(state.prefs, { country: '', year: '' });   // Land und Jahr gelten je Münzart
+    buildSelects();
+  }
+
+  ui.tabbar.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-cat]');
+    if (!b) return;
+    const k = Number(b.dataset.cat);
+    if (k === state.prefs.cat) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    setCategory(k);
+    savePrefs();
+    updateBanner();
+    render();
+    window.scrollTo({ top: 0 });
+  });
+
   $('#bannerShow').addEventListener('click', () => {
+    // Zur ersten Münzart mit neuen Münzen wechseln (die aktuelle zuerst).
+    const k = [state.prefs.cat, ...CATS.map((c) => c.k)].find((x) => [...state.newIds].some((id) => state.byId.get(id)?.k === x));
+    if (k !== undefined && k !== state.prefs.cat) setCategory(k);
     state.prefs.filter = 'new';
     savePrefs();
+    updateBanner();
     render();
     window.scrollTo({ top: 0 });
   });
@@ -718,7 +789,8 @@
     Object.entries(state.countries)
       .sort((a, b) => a[1].n.localeCompare(b[1].n, 'de'))
       .forEach(([k, v]) => select.append(new Option(`${v.f} ${v.n}`, k)));
-    select.value = state.prefs.country || '';
+    select.value = state.prefs.country || (state.prefs.cat !== 2 ? 'AT' : '');
+    $('#addCat').value = String(state.prefs.cat);
     $('#addYear').value = '';
     $('#addTitle').value = '';
     $('#addOwned').checked = true;
@@ -730,9 +802,10 @@
     const c = $('#addCountry').value;
     const y = parseInt($('#addYear').value, 10);
     const t = $('#addTitle').value.trim();
-    if (!c || !(y >= 2004 && y <= 2100) || !t) { toast('Bitte Land, Jahr und Motiv ausfüllen.'); return; }
+    if (!c || !(y >= 2002 && y <= 2100) || !t) { toast('Bitte Land, Jahr und Motiv ausfüllen.'); return; }
     const id = `custom-${Date.now().toString(36)}`;
-    state.custom.push({ id, c, y, t });
+    const k = Number($('#addCat').value) || 2;
+    state.custom.push(k === 2 ? { id, c, y, t } : { id, c, y, t, k });
     store.set(KEY.custom, state.custom);
     if ($('#addOwned').checked) { state.owned.add(id); store.set(KEY.owned, [...state.owned]); }
     addDlg.close();
