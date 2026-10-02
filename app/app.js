@@ -8,6 +8,9 @@
     prefs: 'euro2.prefs',
     synced: 'euro2.synced',
     custom: 'euro2.custom',
+    nkey: 'euro2.numistaKey',     // eigener Numista-Schlüssel (nur auf diesem Gerät)
+    prices: 'euro2.prices',       // abgerufene Preise (nur auf diesem Gerät)
+    pmeta: 'euro2.priceMeta',     // Stand des Preisabrufs
   };
   const DATA_URL = 'data/coins.json';
   const SYNC_EVERY_MS = 30 * 60 * 1000;
@@ -54,6 +57,8 @@
 
   const state = {
     credits: {},      // Bildnachweise (Wikimedia Commons), je Münz-ID
+    nmap: {},         // Numista-Zuordnung: Einheit → [Typ-Nr., Ausgabe-Nr.]
+    prices: store.get(KEY.prices, {}),   // "Typ:Ausgabe" → [Umlauf, bankfrisch, Abrufzeit]
     base: null,
     coins: [],
     byId: new Map(),
@@ -76,6 +81,7 @@
     bar: $('#bar'), ringFill: $('#ringFill'), pct: $('#pct'), ownCount: $('#ownCount'), totalCount: $('#totalCount'),
     banner: $('#banner'), bannerText: $('#bannerText'),
     menu: $('#menu'), menuInfo: $('#menuInfo'), toast: $('#toast'), top: $('#top'),
+    worth: $('#worth'), priceInfo: $('#priceInfo'), priceKey: $('#priceKey'),
   };
 
   /* ---------- Daten ---------- */
@@ -129,6 +135,233 @@
       const res = await fetch('data/credits.json');
       if (res.ok) state.credits = await res.json();
     } catch { /* ohne Nachweis weiter: betrifft nur die Anzeige */ }
+  }
+
+  /* ---------- Preise (Numista) ---------- */
+
+  // Schätzpreise von Numista, abgerufen mit dem eigenen Schlüssel. Welche Münze zu welcher Numista-Nummer gehört, steht
+  // in data/numista.json; die Preise selbst bleiben nur auf diesem Gerät (so verlangen es die Bedingungen von Numista).
+  const NUMISTA_API = 'https://api.numista.com/v3';
+  const PRICE_TTL_MS = 30 * 24 * 60 * 60 * 1000;   // Preise einmal im Monat auffrischen
+  const euroFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+  const euroFmt0 = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const fmtEuro = (v) => (v >= 100 ? euroFmt0 : euroFmt).format(v);
+  const thisMonth = () => new Date().toISOString().slice(0, 7);   // Numista zählt Abrufe je Kalendermonat (UTC)
+
+  async function loadNumista() {
+    try {
+      const res = await fetch('data/numista.json');
+      if (res.ok) state.nmap = (await res.json()).units || {};
+    } catch { /* ohne Zuordnung keine Preise */ }
+  }
+
+  const hasPriceKey = () => !!store.get(KEY.nkey, '');
+  const priceKeyOf = (uid) => { const m = state.nmap[uid]; return m ? `${m[0]}:${m[1]}` : ''; };
+  const unitPrice = (uid) => state.prices[priceKeyOf(uid)] || null;
+
+  // Preis einer Münze: bei Sätzen die Summe der acht Münzen, bei Prägestätten der niedrigste („ab“).
+  function coinPrice(c) {
+    const ps = unitIds(c).map(unitPrice);
+    if (!ps.length || ps.some((p) => !p)) return null;   // erst zeigen, wenn alle Teile geladen sind
+    const pick = (i) => {
+      const v = ps.map((p) => p[i]);
+      if (v.some((x) => typeof x !== 'number')) return null;
+      if (c.k === 1) return { v: v.reduce((a, b) => a + b, 0), from: false };
+      return { v: Math.min(...v), from: Math.max(...v) > Math.min(...v) };
+    };
+    return { circ: pick(0), unc: pick(1) };
+  }
+
+  function paintPrice(node, c) {
+    const p = hasPriceKey() ? coinPrice(c) : null;
+    const parts = [];
+    const part = (label, x, cls) => {
+      const s = el('span', cls);
+      s.append(`${label} `, el('b', null, `${x.from ? 'ab ' : ''}${fmtEuro(x.v)}`));
+      parts.push(s);
+    };
+    if (p && p.circ) part('Umlauf', p.circ, 'pc');
+    if (p && p.unc) part('Bankfrisch', p.unc, 'pu');
+    node.replaceChildren(...parts);
+    node.hidden = !parts.length;
+  }
+
+  function priceNode(c) {
+    const n = el('span', 'price');
+    n.dataset.price = c.id;
+    paintPrice(n, c);
+    return n;
+  }
+
+  // Wert der abgehakten Münzen in der gewählten Münzart.
+  function paintWorth() {
+    let circ = 0, unc = 0, priced = 0, owned = 0;
+    if (hasPriceKey()) {
+      for (const c of state.coins) {
+        if (!inCat(c)) continue;
+        for (const id of unitIds(c)) {
+          if (!state.owned.has(id)) continue;
+          owned++;
+          const p = unitPrice(id);
+          if (!p || (p[0] == null && p[1] == null)) continue;
+          priced++;
+          circ += p[0] ?? p[1];   // fehlt ein Preis, zählt der andere
+          unc += p[1] ?? p[0];
+        }
+      }
+    }
+    ui.worth.hidden = !priced;
+    if (!priced) return;
+    ui.worth.replaceChildren('Wert ', el('b', null, fmtEuro(circ)), ' Umlauf · ', el('b', null, fmtEuro(unc)), ' bankfrisch',
+      ...(priced < owned ? [el('small', null, ` (Preise für ${priced} von ${owned})`)] : []));
+  }
+
+  function paintPrices() {
+    ui.list.querySelectorAll('[data-price]').forEach((n) => {
+      const c = state.byId.get(n.dataset.price);
+      if (c) paintPrice(n, c);
+    });
+    paintWorth();
+  }
+
+  // Preistabelle im großen Münzbild.
+  function priceDetail(c) {
+    if (!hasPriceKey()) return null;
+    const units = c.units || [{ id: c.id, mark: '', city: '' }];
+    const rows = units.map((u) => [u, unitPrice(u.id)]);
+    const box = el('div', 'zprice');
+    if (!state.nmap[units[0].id]) { box.append(el('p', 'muted small', 'Für diese Münze gibt es bei Numista noch keinen Preis.')); return box; }
+    if (rows.every(([, p]) => !p)) { box.append(el('p', 'muted small', 'Preis wird noch geladen.')); return box; }
+    const link = (href, text) => Object.assign(el('a', null, text), { href, target: '_blank', rel: 'noopener' });
+    const cell = (v) => el('td', null, typeof v === 'number' ? fmtEuro(v) : '–');
+    const table = el('table');
+    const head = el('tr');
+    head.append(el('th'), el('th', null, 'Umlauf'), el('th', null, 'Bankfrisch'));
+    table.append(head);
+    for (const [u, p] of rows) {
+      const tr = el('tr');
+      const th = el('th');
+      const label = !u.mark ? 'Preis' : c.k === 1 ? u.city : `${u.mark} · ${u.city}`;
+      th.append(c.k === 1 && state.nmap[u.id] ? link(`https://de.numista.com/catalogue/pieces${state.nmap[u.id][0]}.html`, label) : label);
+      tr.append(th, cell(p && p[0]), cell(p && p[1]));
+      table.append(tr);
+    }
+    if (c.k === 1) {
+      const sum = coinPrice(c);
+      const tr = el('tr', 'sum');
+      tr.append(el('th', null, 'Satz gesamt'), cell(sum && sum.circ && sum.circ.v), cell(sum && sum.unc && sum.unc.v));
+      table.append(tr);
+    }
+    const stamps = rows.map(([, p]) => p && p[2]).filter(Boolean);
+    const src = el('p', 'muted small');
+    src.append('Schätzpreise von ');
+    src.append(c.k === 1 ? link('https://de.numista.com/', 'Numista')
+      : link(`https://de.numista.com/catalogue/pieces${state.nmap[units[0].id][0]}.html`, `Numista N# ${state.nmap[units[0].id][0]}`));
+    src.append(` · Umlauf = vorzüglich, bankfrisch = unzirkuliert · Stand ${new Date(Math.min(...stamps)).toLocaleDateString('de-DE')}`);
+    box.append(table, src);
+    return box;
+  }
+
+  const priceLoader = (() => {
+    let running = false;
+    const meta = () => store.get(KEY.pmeta, {});
+    const setMeta = (m) => store.set(KEY.pmeta, { ...meta(), ...m });
+    const allUnits = () => state.coins.flatMap((c) => unitIds(c).map((id) => [id, c]));
+
+    // Reihenfolge: abgehakte Münzen zuerst, dann die gewählte Münzart, dann der Rest.
+    function queue() {
+      const now = Date.now(), seen = new Set(), q = [];
+      const rank = ([id, c]) => (state.owned.has(id) ? 0 : c.k === state.prefs.cat ? 1 : 2);
+      for (const [id] of allUnits().sort((a, b) => rank(a) - rank(b))) {
+        const k = priceKeyOf(id);
+        if (!k || seen.has(k)) continue;
+        seen.add(k);
+        const p = state.prices[k];
+        if (!p || now - p[2] > PRICE_TTL_MS) q.push(k);
+      }
+      return q;
+    }
+
+    function stats() {
+      const keys = new Set(allUnits().map(([id]) => priceKeyOf(id)).filter(Boolean));
+      let have = 0;
+      keys.forEach((k) => { if (state.prices[k]) have++; });
+      return { have, total: keys.size };
+    }
+
+    async function fetchOne(k, apiKey) {
+      const [t, i] = k.split(':');
+      const fail = (code) => Object.assign(new Error(code), { code });
+      const res = await fetch(`${NUMISTA_API}/types/${t}/issues/${i}/prices?currency=EUR`, { headers: { 'Numista-API-Key': apiKey } });
+      if (res.status === 401 || res.status === 403) throw fail('key');
+      if (res.status === 429) throw fail('quota');
+      if (res.status === 404) return [null, null, Date.now()];
+      if (!res.ok) throw fail('net');
+      const g = {};
+      for (const p of (await res.json()).prices || []) if (typeof p.price === 'number') g[p.grade] = p.price;
+      return [g.xf ?? g.vf ?? null, g.unc ?? g.au ?? null, Date.now()];
+    }
+
+    async function run(manual = false) {
+      const apiKey = store.get(KEY.nkey, '');
+      if (!apiKey || running || !state.coins.length || !Object.keys(state.nmap).length) return;
+      const m = meta();
+      if (!manual && (m.error === 'key' || m.blocked === thisMonth())) return;
+      const q = queue();
+      if (!q.length) { if (manual) toast('Alle Preise sind aktuell.'); updatePriceInfo(); return; }
+      running = true;
+      setMeta({ error: '', blocked: '' });
+      updatePriceInfo();
+      let done = 0, painted = Date.now();
+      try {
+        for (const k of q) {
+          state.prices[k] = await fetchOne(k, apiKey);
+          if (++done % 20 === 0) store.set(KEY.prices, state.prices);
+          if (Date.now() - painted > 1500) { paintPrices(); updatePriceInfo(); painted = Date.now(); }
+          await new Promise((r) => setTimeout(r, 250));
+        }
+        setMeta({ last: Date.now() });
+        if (manual) toast('Preise sind geladen.');
+      } catch (e) {
+        if (e.code === 'quota') {
+          setMeta({ blocked: thisMonth(), last: Date.now() });
+          if (manual) toast('Das Monatskontingent von Numista ist aufgebraucht. Der Rest kommt nächsten Monat.');
+        } else if (e.code === 'key') {
+          setMeta({ error: 'key' });
+          toast('Numista hat den Schlüssel abgelehnt. Bitte im Menü prüfen.');
+        } else if (manual) {
+          toast('Keine Verbindung zu Numista – später erneut versuchen.');
+        }
+      } finally {
+        running = false;
+        store.set(KEY.prices, state.prices);
+        paintPrices();
+        updatePriceInfo();
+      }
+    }
+
+    return { run, stats, meta, isRunning: () => running };
+  })();
+
+  function updatePriceInfo() {
+    const key = hasPriceKey();
+    $('#priceKeyRow').hidden = key;
+    $('#priceActions').hidden = !key;
+    if (!key) {
+      ui.priceInfo.textContent = 'Mit einem kostenlosen Schlüssel von numista.com zeigt die App bei jeder Münze den Preis '
+        + '(Umlauf und bankfrisch) und den Wert deiner Sammlung.';
+      return;
+    }
+    const { have, total } = priceLoader.stats();
+    const m = priceLoader.meta();
+    let s = `Preise für ${have} von ${total} Münzen`;
+    if (priceLoader.isRunning()) s += ' – werden geladen …';
+    else if (m.error === 'key') s = 'Numista hat den Schlüssel abgelehnt. Bitte entfernen und neu eintragen.';
+    else if (m.blocked === thisMonth()) {
+      const next = new Date(); next.setUTCMonth(next.getUTCMonth() + 1, 1);
+      s += ` · Monatskontingent von Numista aufgebraucht, weiter ab 1. ${MONTHS[next.getUTCMonth()]}`;
+    } else if (m.last) s += ` · Stand ${new Date(m.last).toLocaleDateString('de-DE')}`;
+    ui.priceInfo.textContent = s;
   }
 
   function applyData(data) {
@@ -265,7 +498,7 @@
     const row = el('div', 'coin multi');
     row.dataset.coin = c.id;
     const info = el('span', 'info');
-    info.append(el('span', 'title', c.t), metaFor(c));
+    info.append(el('span', 'title', c.t), metaFor(c), priceNode(c));
     const mints = el('span', 'mints');
     mints.setAttribute('role', 'group');
     mints.setAttribute('aria-label', c.k === 1 ? 'Münzen des Satzes' : 'Prägestätten');
@@ -310,7 +543,7 @@
     input.checked = state.owned.has(c.id);
 
     const info = el('span', 'info');
-    info.append(el('span', 'title', c.t), metaFor(c));
+    info.append(el('span', 'title', c.t), metaFor(c), priceNode(c));
 
     label.append(input, medalFor(c), info);
     if (state.newIds.has(c.id)) label.append(el('span', 'badge-new', 'NEU'));
@@ -406,6 +639,7 @@
       const s = groups.get(byYear ? Number(node.dataset.gk) : node.dataset.gk);
       if (s) node.textContent = `${s.own} / ${s.n}`;
     });
+    paintWorth();
   }
 
   function updateBanner() {
@@ -726,7 +960,7 @@
     img.src = `img/l/${c.id}.webp`;
     $('#zoomTitle').textContent = c.t;
     $('#zoomMeta').textContent = `${c.flag} ${c.countryName} · ${c.when}${c.g ? ' · Gemeinschaftsausgabe' : ''}`;
-    $('#zoomCredit').replaceChildren(...[creditNode(c.id)].filter(Boolean));
+    $('#zoomCredit').replaceChildren(...[priceDetail(c), creditNode(c.id)].filter(Boolean));
     showDialog(zoomDlg);
   });
   zoomDlg.addEventListener('click', () => zoomDlg.close());
@@ -795,7 +1029,32 @@
     compose();
   });
 
-  $('#menuBtn').addEventListener('click', () => { updateMenuInfo(); showDialog(ui.menu); });
+  $('#menuBtn').addEventListener('click', () => { updateMenuInfo(); updatePriceInfo(); showDialog(ui.menu); });
+
+  $('#priceKeySave').addEventListener('click', () => {
+    const v = ui.priceKey.value.trim();
+    if (!/^[A-Za-z0-9]{20,64}$/.test(v)) { toast('Das sieht nicht wie ein Numista-Schlüssel aus.'); return; }
+    store.set(KEY.nkey, v);
+    store.set(KEY.pmeta, {});
+    ui.priceKey.value = '';
+    updatePriceInfo();
+    paintPrices();
+    toast('Schlüssel gespeichert – Preise werden geladen.');
+    priceLoader.run(true);
+  });
+  ui.priceKey.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); $('#priceKeySave').click(); }
+  });
+  $('#priceRefresh').addEventListener('click', () => priceLoader.run(true));
+  $('#priceKeyDel').addEventListener('click', async () => {
+    if (!(await ask('Numista-Schlüssel und gespeicherte Preise von diesem Gerät löschen?', 'Löschen'))) return;
+    try { localStorage.removeItem(KEY.nkey); } catch { /* nicht möglich */ }
+    state.prices = {};
+    store.set(KEY.prices, {});
+    store.set(KEY.pmeta, {});
+    paintPrices();
+    updatePriceInfo();
+  });
   $('#syncBtn').addEventListener('click', () => { ui.menu.close(); sync(true); });
   $('#exportBtn').addEventListener('click', exportBackup);
   $('#importBtn').addEventListener('click', () => $('#importFile').click());
@@ -814,7 +1073,9 @@
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && Date.now() - store.get(KEY.synced, 0) > SYNC_EVERY_MS) sync();
+    if (document.hidden) return;
+    if (Date.now() - store.get(KEY.synced, 0) > SYNC_EVERY_MS) sync();
+    priceLoader.run();
   });
   window.addEventListener('resize', () => document.documentElement.style.setProperty('--head-h', `${ui.top.offsetHeight}px`));
 
@@ -823,7 +1084,7 @@
   loadCredits();
   const cached = store.get(KEY.data, null);
   if (isValidData(cached)) { applyData(cached); updateMenuInfo(); }
-  sync();
+  Promise.all([loadNumista(), sync()]).then(() => { paintPrices(); priceLoader.run(); });
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});

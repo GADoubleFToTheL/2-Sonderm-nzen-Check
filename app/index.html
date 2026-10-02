@@ -55,6 +55,7 @@
         <div class="sum-text">
           <div class="big"><b id="ownCount">0</b> <span>von <span id="totalCount">0</span></span></div>
           <div class="sum-label" id="sumLabel">in deiner Sammlung</div>
+          <div class="worth" id="worth" hidden></div>
         </div>
       </div>
       <div class="tiles" id="chips" role="group" aria-label="Anzeigen">
@@ -92,6 +93,18 @@
     <form method="dialog">
       <h2>Menü</h2>
       <p class="muted" id="menuInfo"></p>
+      <div class="price-box">
+        <h3>Preise</h3>
+        <p class="muted" id="priceInfo"></p>
+        <div class="key-row" id="priceKeyRow">
+          <input id="priceKey" type="text" inputmode="text" placeholder="Schlüssel einfügen" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Numista-Schlüssel">
+          <button type="button" id="priceKeySave">Speichern</button>
+        </div>
+        <div class="price-actions" id="priceActions" hidden>
+          <button type="button" id="priceRefresh">Preise jetzt laden</button>
+          <button type="button" id="priceKeyDel" class="quiet">Schlüssel entfernen</button>
+        </div>
+      </div>
       <button type="button" id="addBtn">Fehlende Münze hinzufügen</button>
       <button type="button" id="imgBtn">Münzbilder offline speichern</button>
       <button type="button" id="syncBtn">Nach neuen Münzen suchen</button>
@@ -99,7 +112,7 @@
       <button type="button" id="importBtn">Sicherung einspielen</button>
       <button type="button" id="resetBtn" class="danger">Alle Häkchen löschen</button>
       <button value="close" class="primary">Schließen</button>
-      <p class="muted small">Münzbilder 2 € und Kursmünzensätze: © Europäische Zentralbank (ecb.europa.eu) und Europäische Kommission, verkleinert. Fotos der 25-€-Münzen: Wikimedia Commons (NobbiP, KenzoMogi), CC BY-SA; Nachweis beim Antippen des Bildes. Die Münzmotive gehören den jeweiligen Ausgabeländern.</p>
+      <p class="muted small">Münzbilder 2 € und Kursmünzensätze: © Europäische Zentralbank (ecb.europa.eu) und Europäische Kommission, verkleinert. Fotos der 25-€-Münzen: Wikimedia Commons (NobbiP, KenzoMogi), CC BY-SA; Nachweis beim Antippen des Bildes. Die Münzmotive gehören den jeweiligen Ausgabeländern. Preise: Schätzwerte von Numista (numista.com), abgerufen mit deinem eigenen Schlüssel und nur auf diesem Gerät gespeichert.</p>
     </form>
     <input type="file" id="importFile" accept=".json,application/json" hidden>
   </dialog>

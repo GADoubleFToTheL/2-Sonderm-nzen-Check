@@ -232,6 +232,9 @@ option, optgroup { background: var(--surface-2); color: var(--text); }
 .sum-text .big b { font-size: 32px; font-weight: 800; letter-spacing: -0.6px; }
 .sum-text .big > span { font-size: 16px; font-weight: 600; color: var(--text-2); }
 .sum-label { margin-top: 4px; font-size: 13px; color: var(--text-3); }
+.worth { margin-top: 6px; font-size: 12.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.worth b { color: var(--text); font-weight: 700; }
+.worth small { font-size: 11.5px; }
 
 .tiles { display: flex; gap: 8px; margin-top: 14px; }
 .tiles button {
@@ -378,6 +381,14 @@ button.medal { border: 0; padding: 0; font: inherit; cursor: zoom-in; }
   background: var(--accent-soft); color: var(--info); vertical-align: 1px;
 }
 .tag-u { background: rgba(251, 191, 36, 0.16); color: #fcd34d; }
+/* Preise (Numista): Umlauf und bankfrisch nebeneinander */
+.price { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 2px; font-size: 11.5px; color: var(--text-3); }
+.price > span {
+  padding: 1px 8px; border-radius: 99px; white-space: nowrap;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
+}
+.price b { color: var(--text-2); font-weight: 650; font-variant-numeric: tabular-nums; }
+.price .pu b { color: var(--success); }
 .tag-own { background: rgba(167, 139, 250, 0.18); color: #c4b5fd; }
 .del {
   flex: none; width: 30px; height: 30px; border-radius: 50%;
@@ -501,6 +512,19 @@ dialog.zoom img { display: block; width: 100%; max-width: 320px; height: auto; a
 dialog.zoom h2 { font-size: 17px; margin: 4px 0; }
 dialog.zoom a { color: var(--info); }
 dialog.zoom .muted.small { margin-top: 6px; }
+.zprice table { width: 100%; margin: 8px 0 2px; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.zprice th, .zprice td { padding: 5px 6px; border-bottom: 1px solid var(--border); }
+.zprice th { text-align: left; font-weight: 600; color: var(--text-2); }
+.zprice tr:first-child th { font-size: 11.5px; color: var(--text-3); font-weight: 650; text-align: right; }
+.zprice td { text-align: right; }
+.zprice tr.sum th, .zprice tr.sum td { font-weight: 750; color: var(--text); border-bottom: 0; }
+.price-box { display: grid; gap: 8px; padding: 12px 0 4px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.price-box h3 { margin: 0; font-size: 14px; font-weight: 750; }
+.price-box .muted { margin: 0; }
+.key-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.key-row button { padding: 0 14px; }
+.price-actions { display: grid; gap: 8px; }
+dialog button.quiet { background: transparent; color: var(--text-3); height: 36px; }
 
 #askText { margin: 0 0 4px; font-weight: 650; white-space: pre-line; }
 

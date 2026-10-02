@@ -95,6 +95,19 @@ for (const [id, c] of Object.entries(credits)) {
 }
 for (const c of data.coins) if ((c.k === 5 || c.k === 25) && c.i === 1 && !credits[c.id]) err(`${c.id}: Foto ohne Eintrag in credits.json (Quellenangabe fehlt).`);
 
+// Numista-Zuordnung (für die Preise): jeder Schlüssel muss eine Münze bzw. Prägestätte/Satz-Münze sein,
+// der Wert ein Paar aus Typ-Nr. und Ausgabe-Nr. Münzen ohne Zuordnung zeigen keinen Preis (nur Hinweis).
+const unitIdsOf = (c) => (c.k === 1 ? ['1c', '2c', '5c', '10c', '20c', '50c', '1e', '2e'].map((d) => `${c.id}@${d}`)
+  : countries[c.c]?.mm && !c.k ? Object.keys(countries[c.c].mm).map((m) => `${c.id}@${m}`) : [c.id]);
+const allUnits = new Set(data.coins.flatMap(unitIdsOf));
+let numista = { units: {} };
+try { numista = JSON.parse(readFileSync(join(dirname(file), 'numista.json'), 'utf8')); } catch { err('data/numista.json fehlt oder ist kein gültiges JSON.'); }
+for (const [id, v] of Object.entries(numista.units ?? {})) {
+  if (!allUnits.has(id)) err(`numista.json: „${id}“ ist keine Münze (bzw. Prägestätte/Satz-Münze) in coins.json.`);
+  if (!Array.isArray(v) || v.length !== 2 || !v.every((x) => Number.isInteger(x) && x > 0)) err(`numista.json: „${id}“ braucht [Typ-Nr., Ausgabe-Nr.].`);
+}
+const noPrice = data.coins.filter((c) => !unitIdsOf(c).some((u) => numista.units?.[u])).map((c) => c.id);
+
 const unverified = data.coins.filter((c) => c.u).map((c) => c.id);
 const units = data.coins.reduce((n, c) => n + (c.k === 1 ? 8 : countries[c.c]?.mm && !c.k ? Object.keys(countries[c.c].mm).length : 1), 0);
 const proKat = [[2, '2 €'], [5, '5 €'], [25, '25 €'], [1, 'Sätze']].map(([k, l]) => `${l}: ${data.coins.filter((c) => (c.k ?? 2) === k).length}`).join(' · ');
@@ -103,6 +116,7 @@ console.log(`Mit Münzbild: ${withImg} von ${data.coins.length}`);
 console.log('Je Jahr:', [...byYear].sort((a, b) => a[0] - b[0]).map(([y, n]) => `${y}:${n}`).join(' '));
 console.log('Je Land:', [...byCountry].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c}:${n}`).join(' '));
 if (unverified.length) console.log(`Als „ungeprüft“ markiert (${unverified.length}): ${unverified.join(', ')}`);
+if (noPrice.length) console.log(`Ohne Numista-Zuordnung, also ohne Preis (${noPrice.length}): ${noPrice.join(', ')}`);
 for (const w of warnings) console.warn(`Hinweis: ${w}`);
 for (const e of errors) console.error(`FEHLER: ${e}`);
 if (errors.length) {
