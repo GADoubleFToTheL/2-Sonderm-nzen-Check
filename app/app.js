@@ -60,6 +60,7 @@
   };
 
   const state = {
+    credits: {},      // Bildnachweise (Wikimedia Commons), je Münz-ID
     base: null,
     coins: [],
     byId: new Map(),
@@ -109,6 +110,29 @@
       when: month ? `${month} ${c.y}` : String(c.y),
       search: norm([country.n, c.c, c.y, month, c.t, c.g === 1 ? 'gemeinschaftsausgabe gemeinsame' : '', c.custom ? 'eigene' : ''].join(' ')),
     };
+  }
+
+  // Quellenangabe für ein Foto (CC BY-SA verlangt Urheber, Lizenz und Hinweis auf Bearbeitung).
+  function creditNode(id) {
+    const c = state.credits[id];
+    if (!c) return null;
+    const lic = /^CC BY-SA (\d\.\d)$/.exec(c.l);
+    const link = (href, text) => Object.assign(el('a', null, text), { href, target: '_blank', rel: 'noopener' });
+    const p = el('p', 'muted small');
+    p.append('Foto: ',
+      link(`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(c.f.replace(/ /g, '_'))}`, c.a),
+      ' · ',
+      lic ? link(`https://creativecommons.org/licenses/by-sa/${lic[1]}/`, c.l) : c.l,
+      ' · Wikimedia Commons · verkleinert, rund ausgeschnitten');
+    return p;
+  }
+
+  async function loadCredits() {
+    if (HOST) { state.credits = HOST.credits || {}; return; }
+    try {
+      const res = await fetch('data/credits.json');
+      if (res.ok) state.credits = await res.json();
+    } catch { /* ohne Nachweis weiter: betrifft nur die Anzeige */ }
   }
 
   function applyData(data) {
@@ -757,6 +781,7 @@
     }
     $('#zoomTitle').textContent = c.t;
     $('#zoomMeta').textContent = `${c.flag} ${c.countryName} · ${c.when}${c.g ? ' · Gemeinschaftsausgabe' : ''}`;
+    $('#zoomCredit').replaceChildren(...[creditNode(c.id)].filter(Boolean));
     zoomDlg.showModal();
   });
   zoomDlg.addEventListener('click', () => zoomDlg.close());
@@ -850,6 +875,7 @@
 
   /* ---------- Start ---------- */
 
+  loadCredits();
   if (HOST) {
     $('#syncBtn').hidden = true;
     $('#imgBtn').hidden = true;

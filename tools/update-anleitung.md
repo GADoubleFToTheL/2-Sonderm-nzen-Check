@@ -26,8 +26,14 @@ Münze Österreich (`https://www.muenzeoesterreich.at/sammeln/euro-muenzen/5-eur
 `y` = Jahrgang auf der Münze; `m` nur setzen, wenn das Ausgabejahr gleich dem Jahrgang ist (Neujahrsmünzen
 erscheinen im Dezember davor, dann ohne `m`). Normalerweise erscheinen zwei 5-€-Kupfermünzen pro Jahr (Neujahrs- und
 Ostermünze, gelegentlich eine dritte) und eine 25-€-Silber-Niob-Münze. Nur bereits **ausgegebene** Münzen eintragen
-(Ausgabedatum erreicht). 10-€-Kupfermünzen, Silber- und Goldmünzen gehören nicht in die Liste. Fotos gibt es für
-diese Münzarten nicht (Bilder der Münze Österreich sind urheberrechtlich geschützt), `i` weglassen.
+(Ausgabedatum erreicht). 10-€-Kupfermünzen, Silber- und Goldmünzen gehören nicht in die Liste. **Fotos:** Bilder
+der Münze Österreich dürfen nicht verwendet werden (nur persönlicher Gebrauch laut Impressum). Erlaubt sind frei
+lizenzierte Fotos von Wikimedia Commons (CC BY, CC BY-SA oder CC0; Autor und Lizenz auf der Dateiseite prüfen,
+Kategorie „Euro coins (25 euro)“ bzw. „Commemorative Euro coins of Austria“). Dann Eintrag in
+`app/data/credits.json` (`{"a": Autor, "l": "CC BY-SA 4.0", "f": "Dateiname.jpg"}`) und Bild mit
+`tools/make-image.py` erzeugen; `node tools/validate.mjs` meldet fehlende Nachweise als Fehler. Ohne freies Foto
+`i` weglassen (die App zeigt dann eine Wert-Kachel). Die API von Wikimedia lehnt viele Abrufe ab (HTTP 429):
+Kategorieseiten und Dateiseiten per `curl` mit eigenem User-Agent und Pausen abrufen.
 
 Abgleich mit `coins.json`: nach **Land + Jahr + Motiv** vergleichen (Titel in der Liste sind deutsch, die EZB-Seite
 ist englisch). Eine Münze gilt als „schon drin“, wenn Land, Jahr und Motiv zusammenpassen, auch bei anderer

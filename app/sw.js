@@ -3,7 +3,7 @@
 const CACHE = 'euro2-v3';
 const SHELL = [
   './', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
-  'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'data/coins.json',
+  'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'data/coins.json', 'data/credits.json',
 ];
 const NETWORK_TIMEOUT_MS = 4000;
 

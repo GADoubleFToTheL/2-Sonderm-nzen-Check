@@ -120,9 +120,12 @@ Wird ein Land neu aufgenommen (z. B. Bulgarien, sobald es eine Gedenkmünze gibt
 - **5 € Kupfer (32 Münzen) und 25 € Silber-Niob (24 Münzen):** Alle österreichischen Ausgaben seit der ersten
   5-€-Kupfermünze (Ausgabe 14.12.2011, Jahrgang 2012) bzw. seit 2003 (25 €). Quelle für Titel, Jahrgang und
   Ausgabedatum: die Übersichten auf geldmarie.at, abgeglichen mit dem Katalog der Münze Österreich
-  (muenzeoesterreich.at). Für diese Münzarten gibt es **noch keine Fotos**, weil die Bilder der Münze
-  Österreich nicht frei verwendbar sind; stattdessen steht eine Wert-Kachel. Eigene Fotos lassen sich mit
-  `tools/make-image.py` einbinden. **Nicht enthalten**: 10-€-Kupfermünzen, Silber-/Goldmünzen, die
+  (muenzeoesterreich.at). **Fotos:** 21 der 24 Silber-Niob-Münzen (2003–2023) haben ein Foto von Wikimedia
+  Commons (frei lizenziert, CC BY-SA, mit Nachweis beim Antippen des Bildes). Ohne Foto sind die 25-€-Münzen
+  2024–2026 und alle 5-€-Kupfermünzen: Die Münze Österreich erlaubt die Verwendung ihrer Bilder nur für den
+  persönlichen Gebrauch (Impressum), eine Veröffentlichung braucht ihre Zustimmung; frei lizenzierte Fotos
+  dieser Münzen gibt es nicht. Dort steht eine Wert-Kachel. Eigene Fotos lassen sich mit
+  `tools/make-image.py` einbinden (bei fremden Fotos Eintrag in `app/data/credits.json` nicht vergessen). **Nicht enthalten**: 10-€-Kupfermünzen, Silber-/Goldmünzen, die
   Neujahrsmünze 2027 (Ausgabe 2.12.2026).
 - Noch **nicht enthalten** (2 €): Österreich „Beethoven“ (Ausgabe 2027; Proof-Ausgabe ab 2.12.2026), Andorra 2026
   (zwei Münzen, Motive noch nicht bekannt), Bulgarien (die geplante Gedenkmünze wurde blockiert).
@@ -131,7 +134,12 @@ Wird ein Land neu aufgenommen (z. B. Bulgarien, sobald es eine Gedenkmünze gibt
   haben ebenfalls Varianten (z. B. Münzmeisterzeichen), die noch nicht unterschieden werden.
 - Fehlt dir trotzdem eine Münze, kannst du sie in der App über *Menü → Fehlende Münze hinzufügen* ergänzen.
 
-**Quellen der Münzbilder:** Europäische Zentralbank (ecb.europa.eu, verkleinert und rund zugeschnitten) und
+**Fotos der 25-€-Münzen (Wikimedia Commons):** Aufnahmen von NobbiP (2003, 2005–2014) und KenzoMogi (2004,
+2015–2023), lizenziert unter CC BY-SA 3.0 bzw. 4.0. Die Bilder in der App sind verkleinert und rund
+ausgeschnitten und stehen deshalb ebenfalls unter CC BY-SA. Die genauen Dateinamen und Lizenzen je Münze stehen
+in `app/data/credits.json`; die App zeigt sie beim Vergrößern des Bildes samt Link.
+
+**Quellen der Münzbilder (2 €):** Europäische Zentralbank (ecb.europa.eu, verkleinert und rund zugeschnitten) und
 Europäische Kommission (economy-finance.ec.europa.eu) für Monaco „Carladès“ sowie Vatikan 2024/2025. Die
 Münzmotive gehören den jeweiligen Ausgabeländern.
 

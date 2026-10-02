@@ -474,6 +474,8 @@ dialog.zoom img { display: block; width: 100%; max-width: 320px; height: auto; a
 dialog.zoom .zs { position: relative; width: 100%; max-width: 320px; aspect-ratio: 1; margin: 0 auto 8px; }
 dialog.zoom .zl { position: absolute; inset: 0; background-repeat: no-repeat; background-size: 400% 400%; }
 dialog.zoom h2 { font-size: 17px; margin: 4px 0; }
+dialog.zoom a { color: var(--info); }
+dialog.zoom .muted.small { margin-top: 6px; }
 
 #askText { margin: 0 0 4px; font-weight: 650; white-space: pre-line; }
 
