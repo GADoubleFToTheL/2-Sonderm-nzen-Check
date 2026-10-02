@@ -83,6 +83,16 @@ for (const [k, n] of perCountryYear) {
   if (n > limit) warn(`${k}: ${n} nationale Münzen (üblich: höchstens ${limit}) – bitte prüfen.`);
 }
 
+// Bildnachweise (Fotos von Wikimedia Commons): Autor, Lizenz und Dateiname sind Pflicht, sobald
+// ein Foto aus dieser Quelle stammt. Alle Fotos der Münzarten 5 € und 25 € kommen von dort.
+let credits = {};
+try { credits = JSON.parse(readFileSync(join(dirname(file), 'credits.json'), 'utf8')); } catch { err('data/credits.json fehlt oder ist kein gültiges JSON.'); }
+for (const [id, c] of Object.entries(credits)) {
+  if (!ids.has(id)) err(`credits.json: „${id}“ ist keine Münze in coins.json.`);
+  if (!c?.a || !c?.f || !/^CC (BY|BY-SA) \d\.\d$/.test(c?.l ?? '')) err(`credits.json: „${id}“ braucht Autor „a“, Datei „f“ und freie Lizenz „l“ (z. B. „CC BY-SA 4.0“).`);
+}
+for (const c of data.coins) if (c.k && c.i === 1 && !credits[c.id]) err(`${c.id}: Foto ohne Eintrag in credits.json (Quellenangabe fehlt).`);
+
 const unverified = data.coins.filter((c) => c.u).map((c) => c.id);
 const units = data.coins.reduce((n, c) => n + (countries[c.c]?.mm && !c.k ? Object.keys(countries[c.c].mm).length : 1), 0);
 const proKat = [2, 5, 25].map((k) => `${k} €: ${data.coins.filter((c) => (c.k ?? 2) === k).length}`).join(' · ');

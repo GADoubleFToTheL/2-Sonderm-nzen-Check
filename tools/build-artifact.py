@@ -64,6 +64,7 @@ def main():
 
     host = {
         "data": data,
+        "credits": json.loads((APP / "data" / "credits.json").read_text(encoding="utf-8")),
         "idx": {coin_id: n for n, coin_id in enumerate(ids)},
         "t": {"cols": SHEETS["t"]["cols"], "per": SHEETS["t"]["cols"] ** 2},
         "l": {"cols": SHEETS["l"]["cols"], "per": SHEETS["l"]["cols"] ** 2, "files": files},
