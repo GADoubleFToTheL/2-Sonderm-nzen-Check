@@ -57,6 +57,15 @@ Wortwahl. Nie eine Münze doppelt anlegen.
   `python3 tools/make-image.py foto.jpg <ID>` umwandeln (`pip install pillow`). Das Skript setzt `"i": 1`.
   Fehlt das Bild (EZB zeigt „New image coming soon“), die Münze ohne Bild lassen.
 * **Neues Land** zusätzlich unter `countries` eintragen.
+* **Preis-Zuordnung (`app/data/numista.json`):** Nur möglich, wenn die Umgebungsvariable `NUMISTA_API_KEY` gesetzt
+  ist (Kopfzeile `Numista-API-Key`, Basis `https://api.numista.com/v3`; Kontingent 2000 Abrufe pro Monat, sparsam
+  sein). Für eine neue Münze: `types?issuer=<code>&q=2%20euro&category=coin&count=50` (Codes z. B. `allemagne`,
+  `autriche`, `belgique`, `france`, `vatican`; Titel sind englisch), den passenden Typ nach Land, erstem Jahr und Motiv
+  wählen, dann `types/<typ>/issues` und die Ausgabe des Jahres ohne Zusatz („Proof“, „BU set“) nehmen. Eintrag
+  `"<Münz-ID>": [typ, ausgabe]`, bei Deutschland je Prägestätte `"<Münz-ID>@A"` usw. (Feld `mint_letter`). Bei
+  5-€-Münzen gibt es Kupfer- und Silberausgaben: die Kupferausgabe nehmen (`types/<typ>` → `composition`). Ohne
+  Schlüssel oder ohne passenden Numista-Eintrag die Münze weglassen; sie zeigt dann keinen Preis. Preise selbst nie
+  ins Repo schreiben.
 * Oben in der Datei `"updated"` auf das heutige Datum setzen.
 
 ## 3. Regeln

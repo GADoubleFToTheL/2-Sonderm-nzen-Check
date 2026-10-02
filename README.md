@@ -16,6 +16,7 @@ man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
 - **Funktioniert offline** und lässt sich wie eine normale App aufs Handy legen (Android & iPhone)
 - **Sicherung** der Sammlung als Datei (und wieder einspielen)
 - **Fehlende Münze selbst ergänzen**, falls etwas in der Liste fehlt
+- **Preise** bei jeder Münze (Umlauf und bankfrisch) und **Wert der Sammlung**, mit eigenem Numista-Schlüssel
 
 ## Aussehen
 
@@ -42,6 +43,22 @@ Die App ist eine „PWA“: eine Webseite, die sich wie eine App installieren l�
 
 Die Häkchen liegen nur auf dem jeweiligen Gerät. Mit *Menü → Sammlung sichern* lässt sich eine
 Sicherungsdatei erzeugen (z. B. für ein neues Handy).
+
+## Preise (Numista)
+
+Die Preise sind Schätzwerte von [Numista](https://de.numista.com) (Erhaltung „vorzüglich“ = Umlauf und „unzirkuliert“
+= bankfrisch). Numista erlaubt die Daten nur für private Zwecke und nicht zum Veröffentlichen. Deshalb steht in der
+App kein einziger Preis: Jede Person trägt im Menü ihren eigenen, kostenlosen Numista-Schlüssel ein (Konto auf
+numista.com → API → Schlüssel anfordern), und die App holt die Preise selbst und speichert sie nur auf dem Gerät.
+
+- `app/data/numista.json` ordnet jeder Münze (bei Deutschland jeder Prägestätte, bei Sätzen jeder der acht Münzen)
+  die Numista-Typnummer und Ausgabenummer zu. Diese Nummern darf man dauerhaft speichern.
+- Der kostenlose Zugang erlaubt **2000 Abrufe pro Kalendermonat**. Ein Abruf liefert alle Erhaltungsgrade einer
+  Ausgabe; für alle Münzen sind es rund 1100 Abrufe. Die App frischt jeden Preis nach 30 Tagen auf, abgehakte Münzen
+  zuerst. Ist das Kontingent aufgebraucht, wartet sie bis zum nächsten Monat.
+- Angezeigt wird: in der Liste „Umlauf“ und „Bankfrisch“ (bei deutschen Münzen der niedrigste Preis der
+  Prägestätten mit „ab“, bei Sätzen die Summe der acht Münzen), beim Antippen des Bildes die Tabelle je Prägestätte
+  bzw. Satz-Münze mit Link zu Numista, oben der Wert der abgehakten Münzen der gewählten Münzart.
 
 ## Automatische Updates
 
