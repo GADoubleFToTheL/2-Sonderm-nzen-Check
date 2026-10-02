@@ -50,7 +50,11 @@ Wortwahl. Nie eine Münze doppelt anlegen.
 1. `node tools/validate.mjs` muss mit `OK` enden. Bei Fehlern korrigieren; wird es nicht grün, **nichts
    veröffentlichen** und im Bericht schreiben, woran es hängt.
 2. Gibt es **nichts Neues**, nichts ändern, keinen Branch und keinen Pull Request anlegen.
-3. Sonst: neuer Branch `update/<JJJJ-MM-TT>`, Commit mit kurzer deutscher Nachricht (z. B. „2 neue Münzen: …“),
-   Pull Request nach `main` (Beschreibung: welche Münzen neu, welche korrigiert, welche ungeprüft) und den Pull
-   Request zusammenführen (Squash), sobald die Prüfung grün ist.
+3. Sonst: Branch `claude/muenzliste-update` (nur auf diesen Branch darf die Pflege-Sitzung pushen). Er wird jedes
+   Mal frisch von `main` gestartet, weil der vorige Pull Request schon zusammengeführt ist:
+   `git fetch origin main && git checkout -B claude/muenzliste-update origin/main` (bei Arbeit von Hand reicht
+   ein beliebiger eigener Branch). Commit mit kurzer deutscher Nachricht (z. B. „2 neue Münzen: …“),
+   `git push -u origin claude/muenzliste-update --force-with-lease`, Pull Request nach `main` (Beschreibung:
+   welche Münzen neu, welche korrigiert, welche ungeprüft) und den Pull Request zusammenführen (Squash), sobald
+   die Prüfung grün ist.
 4. Abschlussbericht auf Deutsch, kurz: Anzahl neuer Münzen mit Land, Jahr und Motiv, Korrekturen, offene Fragen.
