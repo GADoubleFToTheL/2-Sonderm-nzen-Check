@@ -33,16 +33,6 @@
   };
   const norm = (s) => s.toLowerCase().replace(/ß/g, 'ss').normalize('NFD').replace(/\p{M}/gu, '');
 
-  // Gehostete Fassung (Claude-Artifact): Münzliste und Bilder stecken in der Seite, es gibt keinen Service Worker.
-  const HOST = (() => {
-    try { const n = document.getElementById('euro-host'); return n ? JSON.parse(n.textContent) : null; }
-    catch { return null; }
-  })();
-  if (HOST) document.documentElement.classList.add('host');
-
-  // Diese Schlüssel werden zusätzlich im Claude-Konto gesichert (siehe „cloud“ weiter unten).
-  const SYNCED = new Set([KEY.owned, KEY.custom, KEY.seen]);
-
   let storageWarned = false;
   const store = {
     get(key, fallback) {
@@ -54,7 +44,6 @@
     set(key, value) {
       try {
         localStorage.setItem(key, JSON.stringify(value));
-        if (HOST && SYNCED.has(key)) cloud.touch();
         return true;
       } catch {
         if (!storageWarned) { storageWarned = true; toast('Speichern nicht möglich – Häkchen gehen beim Schließen verloren.'); }
@@ -86,7 +75,7 @@
     searchRow: $('#searchRow'), searchBtn: $('#searchBtn'), catTitle: $('#catTitle'), catSub: $('#catSub'),
     bar: $('#bar'), ringFill: $('#ringFill'), pct: $('#pct'), ownCount: $('#ownCount'), totalCount: $('#totalCount'),
     banner: $('#banner'), bannerText: $('#bannerText'),
-    menu: $('#menu'), menuInfo: $('#menuInfo'), cloudInfo: $('#cloudInfo'), toast: $('#toast'), top: $('#top'),
+    menu: $('#menu'), menuInfo: $('#menuInfo'), toast: $('#toast'), top: $('#top'),
   };
 
   /* ---------- Daten ---------- */
@@ -136,7 +125,6 @@
   }
 
   async function loadCredits() {
-    if (HOST) { state.credits = HOST.credits || {}; return; }
     try {
       const res = await fetch('data/credits.json');
       if (res.ok) state.credits = await res.json();
@@ -248,19 +236,9 @@
     return meta;
   }
 
-  // Lage einer Münze in den Bildtafeln der gehosteten Fassung (kind: 't' klein, 'l' groß).
-  function spriteAt(kind, id) {
-    const n = HOST && HOST.idx[id];
-    if (n == null) return null;
-    const g = HOST[kind];
-    const i = n % g.per;
-    const pct = (k) => `${(k / (g.cols - 1)) * 100}%`;
-    return { sheet: Math.floor(n / g.per), pos: `${pct(i % g.cols)} ${pct(Math.floor(i / g.cols))}` };
-  }
-
   // Rundes Münzbild (antippen = vergrößern); ohne Bild die Landesflagge.
   function medalFor(c) {
-    if (!c.img || (HOST && !spriteAt('t', c.id))) {
+    if (!c.img) {
       if (c.k === 2) return el('span', 'medal', c.flag);
       const m = el('span', `medal denom d${c.k}`);   // ohne Foto: Wert-Kachel in der Farbe der Münzart
       m.append(el('b', null, c.k === 1 ? '€' : `${c.k} €`), el('span', 'flag-badge', c.flag));
@@ -270,20 +248,13 @@
     b.type = 'button';
     b.dataset.zoom = c.id;
     b.setAttribute('aria-label', `Münzbild vergrößern: ${c.t}`);
-    let pic;
-    if (HOST) {
-      const s = spriteAt('t', c.id);
-      pic = el('span', `sp th th${s.sheet}`);
-      pic.style.backgroundPosition = s.pos;
-    } else {
-      pic = el('img');
-      pic.src = `img/t/${c.id}.webp`;
-      pic.alt = '';
-      pic.width = 54;
-      pic.height = 54;
-      pic.loading = 'lazy';
-      pic.decoding = 'async';
-    }
+    const pic = el('img');
+    pic.src = `img/t/${c.id}.webp`;
+    pic.alt = '';
+    pic.width = 54;
+    pic.height = 54;
+    pic.loading = 'lazy';
+    pic.decoding = 'async';
     b.append(pic, el('span', 'flag-badge', c.flag));
     return b;
   }
@@ -594,14 +565,6 @@
     };
     const name = `muenzen-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
     const blob = new Blob([JSON.stringify(payload, null, 1)], { type: 'application/json' });
-    if (HOST) {
-      try {
-        const dl = window.claude && (await window.claude.use('downloads'));
-        if (dl) { await dl.save({ filename: name, data: JSON.stringify(payload, null, 1) }); toast('Sicherung gespeichert.'); return; }
-      } catch (e) { if (e && e.code === 'declined') return; }
-      toast('Speichern als Datei geht hier nicht – deine Sammlung liegt im Claude-Konto.');
-      return;
-    }
     const file = new File([blob], name, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try { await navigator.share({ files: [file], title: '2€ Sondermünzen – Sicherung' }); return; }
@@ -639,100 +602,6 @@
       toast('Diese Datei ist keine gültige Sicherung.');
     }
   }
-
-  /* ---------- Cloud-Speicher (nur gehostete Fassung) ---------- */
-
-  // Spiegelt Häkchen, eigene Münzen und „gesehen“ in den privaten Speicher des Claude-Kontos, damit sie
-  // nicht verloren gehen, wenn der Browser seine Daten löscht. localStorage bleibt der schnelle Zwischenspeicher.
-  const cloud = (() => {
-    const RTS = 'euro2.rts';     // Zeitstempel des letzten Abgleichs mit dem Claude-Konto
-    const DIRTY = 'euro2.dirty'; // lokale Änderungen, die noch nicht gesendet sind
-    const OK = 'Sammlung ist im Claude-Konto gesichert.';
-    const LOCAL = 'Nur in diesem Browser gespeichert. Im Menü kannst du eine Sicherung anlegen.';
-    const raw = {
-      get(k) { try { return localStorage.getItem(k); } catch { return null; } },
-      set(k, v) { try { localStorage.setItem(k, v); } catch { /* nicht möglich */ } },
-      del(k) { try { localStorage.removeItem(k); } catch { /* nicht möglich */ } },
-    };
-    let ref = null, timer = 0, writing = false, again = false;
-
-    const setStatus = (text) => { ui.cloudInfo.hidden = !text; ui.cloudInfo.textContent = text; };
-    const snapshot = () => ({ owned: [...state.owned].sort(), custom: state.custom, seen: [...(state.seen || [])].sort() });
-    const isList = (a) => Array.isArray(a) && a.every((x) => typeof x === 'string');
-
-    function touch() {
-      raw.set(DIRTY, '1');
-      if (!ref) return;
-      clearTimeout(timer);
-      timer = setTimeout(push, 800);
-    }
-
-    // Immer nur ein Schreibvorgang gleichzeitig; Änderungen währenddessen gehen im Anschluss raus.
-    async function push() {
-      if (!ref) return;
-      if (writing) { again = true; return; }
-      writing = true;
-      try {
-        const ts = Date.now();
-        await ref.set({ ...snapshot(), ts });
-        raw.set(RTS, String(ts));
-        raw.del(DIRTY);
-        setStatus(OK);
-      } catch {
-        raw.set(DIRTY, '1');
-        setStatus('Sichern im Claude-Konto hat nicht geklappt. Beim nächsten Häkchen wird es erneut versucht.');
-      } finally {
-        writing = false;
-        if (again) { again = false; push(); }
-      }
-    }
-
-    function apply(owned, custom, seen) {
-      state.owned = new Set(owned);
-      state.custom = custom;
-      state.seen = new Set(seen);
-      raw.set(KEY.owned, JSON.stringify([...state.owned]));
-      raw.set(KEY.custom, JSON.stringify(state.custom));
-      raw.set(KEY.seen, JSON.stringify([...state.seen]));
-      compose();
-      updateMenuInfo();
-    }
-
-    async function connect() {
-      try {
-        if (!window.claude || !window.claude.use) { setStatus(LOCAL); return; }
-        const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
-        const uid = db && user ? await user.id() : null;
-        if (!uid) { setStatus(LOCAL); return; }
-        const doc = db.doc(`data/users/${uid}/sammlung`);
-        const snap = await doc.get();
-        const r = snap.exists ? snap.data() : null;
-        ref = doc;
-        if (!r || !isList(r.owned) || !Array.isArray(r.custom) || !isList(r.seen)) { await push(); return; }
-
-        const rts = Number(raw.get(RTS)) || 0;
-        const dirty = raw.get(DIRTY) === '1';
-        if (r.ts === rts) {                       // Stand im Konto = Stand hier
-          if (dirty) await push(); else setStatus(OK);
-        } else if (!dirty && rts) {               // woanders geändert, hier nichts Neues: übernehmen
-          apply(r.owned, r.custom, r.seen);
-          raw.set(RTS, String(r.ts));
-          setStatus(OK);
-        } else {                                  // erster Abgleich oder beides geändert: zusammenführen
-          const have = new Set(state.custom.map((c) => c.id));
-          const custom = state.custom.concat(r.custom.filter((c) => c && typeof c.id === 'string' && !have.has(c.id)));
-          const seen = rts ? [...new Set([...state.seen, ...r.seen])] : r.seen;
-          apply([...new Set([...state.owned, ...r.owned])], custom, seen);
-          await push();
-        }
-      } catch {
-        ref = null;
-        setStatus(LOCAL);
-      }
-    }
-
-    return { touch, connect };
-  })();
 
   /* ---------- Ereignisse ---------- */
 
@@ -853,22 +722,8 @@
     const c = state.byId.get(btn.dataset.zoom);
     if (!c) return;
     const img = $('#zoomImg');
-    const zs = $('#zoomSprite');
-    const t = spriteAt('t', c.id), l = spriteAt('l', c.id);
-    img.hidden = !!HOST;
-    zs.hidden = !HOST;
-    if (HOST && t && l) {
-      // Erst die kleine Tafel (sofort da), darüber lädt das große Bild.
-      zs.className = `zs th th${t.sheet}`;
-      zs.style.backgroundPosition = t.pos;
-      zs.setAttribute('aria-label', c.t);
-      const big = $('#zoomSpriteL');
-      big.style.backgroundImage = `url(${HOST.l.files[l.sheet]})`;
-      big.style.backgroundPosition = l.pos;
-    } else if (!HOST) {
-      img.alt = c.t;
-      img.src = `img/l/${c.id}.webp`;
-    }
+    img.alt = c.t;
+    img.src = `img/l/${c.id}.webp`;
     $('#zoomTitle').textContent = c.t;
     $('#zoomMeta').textContent = `${c.flag} ${c.countryName} · ${c.when}${c.g ? ' · Gemeinschaftsausgabe' : ''}`;
     $('#zoomCredit').replaceChildren(...[creditNode(c.id)].filter(Boolean));
@@ -959,26 +814,18 @@
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (!HOST && !document.hidden && Date.now() - store.get(KEY.synced, 0) > SYNC_EVERY_MS) sync();
+    if (!document.hidden && Date.now() - store.get(KEY.synced, 0) > SYNC_EVERY_MS) sync();
   });
   window.addEventListener('resize', () => document.documentElement.style.setProperty('--head-h', `${ui.top.offsetHeight}px`));
 
   /* ---------- Start ---------- */
 
   loadCredits();
-  if (HOST) {
-    $('#syncBtn').hidden = true;
-    $('#imgBtn').hidden = true;
-    applyData(HOST.data);
-    updateMenuInfo();
-    cloud.connect();
-  } else {
-    const cached = store.get(KEY.data, null);
-    if (isValidData(cached)) { applyData(cached); updateMenuInfo(); }
-    sync();
-  }
+  const cached = store.get(KEY.data, null);
+  if (isValidData(cached)) { applyData(cached); updateMenuInfo(); }
+  sync();
 
-  if (!HOST && 'serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 })();

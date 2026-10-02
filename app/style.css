@@ -346,15 +346,6 @@ button.medal { border: 0; padding: 0; font: inherit; cursor: zoom-in; }
 .medal.d25 { --dc: var(--c25); }
 .medal.d1  { --dc: var(--c1); }
 
-/* Münzbilder aus Bildtafeln (gehostete Fassung): .thN setzt die Tafel, die Position kommt aus dem Skript */
-.th { background-repeat: no-repeat; background-size: 800% 800%; }
-.medal.img .sp {
-  display: block; width: 100%; height: 100%; border-radius: 50%;
-  filter: grayscale(.9) opacity(.62); transition: filter .2s;
-}
-.coin input:checked ~ .medal.img .sp, .coin.multi.complete .medal.img .sp { filter: none; }
-.coin.multi.partial .medal.img .sp { filter: grayscale(.4) opacity(.9); }
-
 /* Münzen mit Prägestätten (Deutschland: A, D, F, G, J) */
 .coin.multi { align-items: flex-start; }
 .coin.multi .medal { margin-top: 2px; }
@@ -487,14 +478,6 @@ dialog .check { display: flex; align-items: center; gap: 10px; font-size: 14.5px
 dialog .check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .muted { color: var(--text-3); font-size: 13px; margin: 0 0 6px; line-height: 1.45; }
 .muted.small { font-size: 11.5px; margin: 4px 0 0; }
-#cloudInfo {
-  display: flex; align-items: center; gap: 8px;
-  padding-top: 10px; margin-top: 2px; border-top: 1px solid var(--border);
-}
-#cloudInfo::before {
-  content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%;
-  background: var(--success); box-shadow: 0 0 8px var(--success);
-}
 
 /* Filter: Fenster, das von unten hochfährt */
 dialog.sheet {
@@ -515,18 +498,11 @@ dialog .field { display: grid; gap: 6px; font-size: 12px; font-weight: 650; lett
 
 dialog.zoom { text-align: center; width: min(92vw, 360px); cursor: zoom-out; }
 dialog.zoom img { display: block; width: 100%; max-width: 320px; height: auto; aspect-ratio: 1; margin: 0 auto 8px; }
-dialog.zoom .zs { position: relative; width: 100%; max-width: 320px; aspect-ratio: 1; margin: 0 auto 8px; }
-dialog.zoom .zl { position: absolute; inset: 0; background-repeat: no-repeat; background-size: 400% 400%; }
 dialog.zoom h2 { font-size: 17px; margin: 4px 0; }
 dialog.zoom a { color: var(--info); }
 dialog.zoom .muted.small { margin-top: 6px; }
 
 #askText { margin: 0 0 4px; font-weight: 650; white-space: pre-line; }
-
-/* Im Claude-Artifact setzt die Seite selbst den Rand oben/unten (Safe-Area) */
-.host body { padding-bottom: 0; }
-.host .top { top: env(safe-area-inset-top, 0px); padding-top: 12px; }
-.host section h2 { top: calc(var(--head-h) + env(safe-area-inset-top, 0px)); }
 
 .toast {
   position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
