@@ -31,6 +31,21 @@ Die App ist eine „PWA“: eine Webseite, die sich wie eine App installieren l�
 Die Häkchen liegen nur auf dem jeweiligen Gerät. Mit *Menü → Sammlung sichern* lässt sich eine
 Sicherungsdatei erzeugen (z. B. für ein neues Handy).
 
+### Sofort-Variante: private Seite in der Claude-App
+
+Ohne Veröffentlichung läuft die App auch als **privates Claude-Artifact** (nur für dich sichtbar, öffnet
+sich in der Claude-App/auf claude.ai, auch am Handy). Dort gibt es keinen Service Worker und keine
+Installation, dafür speichert die Seite Häkchen, eigene Münzen und „gesehen“ zusätzlich im **Claude-Konto**
+(`db`-Funktion, privat pro Person), sodass sie auch nach dem Löschen von Browserdaten wieder da sind.
+
+```bash
+python3 tools/build-artifact.py            # baut build/artifact/ (index.html + img/l*.webp)
+```
+
+Das Skript packt die runden Münzbilder in Bildtafeln (die Artifact-Grenze liegt bei 511 Dateien) und
+legt Münzliste und Tafel-Index in die Seite. Neue Münzen kommen dort an, indem die Seite mit der
+aktualisierten `coins.json` neu veröffentlicht wird; die Häkchen bleiben dabei erhalten.
+
 ## Neue Münzen eintragen
 
 Die ganze Münzliste steht in **`app/data/coins.json`** – eine Münze pro Zeile:
