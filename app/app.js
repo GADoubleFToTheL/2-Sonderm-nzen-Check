@@ -15,9 +15,9 @@
 
   // Münzarten: 2 € (Gedenkmünzen aller Euro-Länder), 5 € (Kupfermünzen) und 25 € (Silber-Niob), beide aus Österreich.
   const CATS = [
-    { k: 2, label: '2 €', name: 'Sondermünzen' },
-    { k: 5, label: '5 €', name: 'Kupfer' },
-    { k: 25, label: '25 €', name: 'Silber-Niob' },
+    { k: 2, label: '2 €', title: '2 € Sondermünzen' },
+    { k: 5, label: '5 €', title: '5 € Kupfermünzen' },
+    { k: 25, label: '25 €', title: '25 € Silber-Niob' },
   ];
 
   const $ = (sel) => document.querySelector(sel);
@@ -78,8 +78,9 @@
   const ui = {
     tabbar: $('#tabbar'), list: $('#list'), search: $('#search'), chips: $('#chips'), chipNew: $('#chipNew'),
     country: $('#country'), year: $('#year'), group: $('#group'),
-    filters: $('#filters'), filterBtn: $('#filterBtn'), filterDot: $('#filterDot'),
-    progressText: $('#progressText'), bar: $('#bar'), barFill: $('#barFill'),
+    filterDlg: $('#filterDlg'), filterBtn: $('#filterBtn'), filterDot: $('#filterDot'),
+    searchRow: $('#searchRow'), searchBtn: $('#searchBtn'), catTitle: $('#catTitle'), catSub: $('#catSub'),
+    bar: $('#bar'), ringFill: $('#ringFill'), pct: $('#pct'), ownCount: $('#ownCount'), totalCount: $('#totalCount'),
     banner: $('#banner'), bannerText: $('#bannerText'),
     menu: $('#menu'), menuInfo: $('#menuInfo'), cloudInfo: $('#cloudInfo'), toast: $('#toast'), top: $('#top'),
   };
@@ -202,6 +203,7 @@
   // Gibt es in der Münzart nur ein Land (5 € und 25 €: Österreich), entfällt die Gruppierung „Je Land“.
   let singleCountry = false;
   let searchPending = false;
+  let searchOpen = false;
   const groupMode = () => (singleCountry ? 'year' : state.prefs.group);
 
   function groupStats(keyFn) {
@@ -384,6 +386,9 @@
       ul.append(coinRow(c));
     }
     ui.list.replaceChildren(frag);
+    const filterName = { all: 'Alle', owned: 'Hab ich', missing: 'Fehlen', new: 'Neu' }[p.filter];
+    const extra = [p.year, p.country && state.countries[p.country]?.n, p.q.trim() && `„${p.q.trim()}“`].filter(Boolean);
+    ui.catSub.textContent = [filterName, ...extra, `${coins.length} ${coins.length === 1 ? 'Münze' : 'Münzen'}`].join(' · ');
     updateCounts();
     syncControls();
   }
@@ -405,9 +410,16 @@
       ui.tabbar.querySelector(`.tab[data-cat="${c.k}"] small`).textContent = `${s.own} / ${s.n}`;
     }
     const pct = total ? Math.round((own / total) * 100) : 0;
-    ui.progressText.textContent = `${own} / ${total}`;
-    ui.barFill.style.width = `${pct}%`;
+    ui.ownCount.textContent = String(own);
+    ui.totalCount.textContent = String(total);
+    ui.pct.textContent = `${pct} %`;
+    ui.ringFill.style.strokeDasharray = `${total ? (own / total) * 100 : 0} 100`;
+    ui.ringFill.style.opacity = own ? '1' : '0';   // bei 0 keinen Punkt zeigen
     ui.bar.setAttribute('aria-valuenow', String(pct));
+    const tile = (f, n) => { ui.chips.querySelector(`[data-filter="${f}"] .n`).textContent = String(n); };
+    tile('all', total);
+    tile('owned', own);
+    tile('missing', total - own);
 
     const byYear = groupMode() === 'year';
     const groups = groupStats((c) => (byYear ? c.y : c.c));
@@ -422,6 +434,7 @@
     const newIn = (k) => [...state.newIds].filter((id) => state.byId.get(id)?.k === k).length;
     const here = newIn(state.prefs.cat);
     ui.chipNew.hidden = here === 0;
+    ui.chipNew.querySelector('.n').textContent = String(here);
     ui.banner.hidden = n === 0;
     for (const c of CATS) ui.tabbar.querySelector(`.tab[data-cat="${c.k}"] .dot`).hidden = newIn(c.k) === 0;
     if (n) ui.bannerText.textContent = n === 1 ? '1 neue Münze in der Liste!' : `${n} neue Münzen in der Liste!`;
@@ -441,8 +454,8 @@
     const inThisCat = state.coins.filter(inCat);
     const codes = new Set(inThisCat.map((c) => c.c));
     singleCountry = codes.size <= 1;
-    ui.country.hidden = singleCountry;
-    ui.group.hidden = singleCountry;
+    $('#countryField').hidden = singleCountry;
+    $('#groupField').hidden = singleCountry;
     const countries = Object.entries(state.countries)
       .filter(([k]) => codes.has(k))
       .sort((a, b) => a[1].n.localeCompare(b[1].n, 'de'));
@@ -472,6 +485,9 @@
     ui.group.value = p.group;
     ui.chips.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === p.filter)));
     ui.filterDot.hidden = !(p.country || p.year);
+    ui.catTitle.textContent = CATS.find((c) => c.k === p.cat).title;
+    ui.searchRow.hidden = !(searchOpen || p.q);
+    ui.searchBtn.setAttribute('aria-expanded', String(!ui.searchRow.hidden));
     document.documentElement.dataset.cat = String(p.cat);
     ui.tabbar.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.cat) === p.cat)));
     document.documentElement.style.setProperty('--head-h', `${ui.top.offsetHeight}px`);
@@ -710,11 +726,21 @@
   ui.group.addEventListener('change', () => { state.prefs.group = ui.group.value; savePrefs(); render(); });
   $('#resetFilters').addEventListener('click', resetFilters);
 
-  ui.filterBtn.addEventListener('click', () => {
-    const open = ui.filters.hidden;
-    ui.filters.hidden = !open;
-    ui.filterBtn.setAttribute('aria-expanded', String(open));
+  ui.filterBtn.addEventListener('click', () => { syncControls(); ui.filterDlg.showModal(); });
+
+  // Suche klappt in der Kopfzeile auf; „Fertig“ leert sie und klappt sie wieder zu.
+  ui.searchBtn.addEventListener('click', () => {
+    searchOpen = ui.searchRow.hidden;
     syncControls();
+    if (searchOpen) ui.search.focus();
+  });
+  $('#searchClose').addEventListener('click', () => {
+    searchOpen = false;
+    clearTimeout(searchTimer);
+    searchPending = false;
+    state.prefs.q = '';
+    savePrefs();
+    render();
   });
 
   function setCategory(k) {
