@@ -20,45 +20,50 @@
   <div class="bgfx" aria-hidden="true"></div>
   <header class="top" id="top">
     <div class="row title-row">
-      <div class="mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5" stroke-opacity=".55"/><path d="M15.6 8.7a4.5 4.5 0 1 0 0 6.6M7.6 10.6h5.6M7.6 13.4h5"/></svg>
+      <div class="name">
+        <h1 id="catTitle">2 € Sondermünzen</h1>
+        <span class="sub" id="catSub"></span>
       </div>
-      <h1 class="name"><span class="a">2€</span><span class="b">Sondermünzen</span></h1>
-      <span class="count" id="progressText">…</span>
+      <button class="icon-btn" id="searchBtn" aria-label="Suchen" aria-expanded="false" aria-controls="searchRow">
+        <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="icon-btn" id="filterBtn" aria-label="Filter" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <i class="dot" id="filterDot" hidden></i>
+      </button>
       <button class="icon-btn" id="menuBtn" aria-label="Menü" aria-haspopup="dialog">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+        <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
       </button>
     </div>
-    <div class="bar" role="progressbar" aria-label="Sammlungsfortschritt" aria-valuemin="0" aria-valuemax="100" id="bar"><span id="barFill"></span></div>
-
-    <div class="row search-row">
+    <div class="row search-row" id="searchRow" hidden>
       <div class="input-search">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <input id="search" type="search" placeholder="Land, Jahr oder Motiv suchen …" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
       </div>
-      <button class="icon-btn" id="filterBtn" aria-label="Filter" aria-expanded="false" aria-controls="filters">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-        <i class="dot" id="filterDot" hidden></i>
-      </button>
-    </div>
-
-    <div class="chips seg" id="chips" role="group" aria-label="Anzeige">
-      <button data-filter="all" aria-pressed="true">Alle</button>
-      <button data-filter="missing" aria-pressed="false">Fehlen</button>
-      <button data-filter="owned" aria-pressed="false">Hab ich</button>
-      <button data-filter="new" aria-pressed="false" id="chipNew" hidden>Neu</button>
-    </div>
-
-    <div class="filters" id="filters" hidden>
-      <select id="country" aria-label="Land"></select>
-      <select id="year" aria-label="Jahr"></select>
-      <select id="group" aria-label="Gruppieren">
-        <option value="year">Je Jahr</option>
-        <option value="country">Je Land</option>
-      </select>
-      <button class="link" id="resetFilters">Filter zurücksetzen</button>
+      <button class="text-btn" id="searchClose">Fertig</button>
     </div>
   </header>
+
+  <section class="summary" aria-label="Fortschritt">
+    <div class="card">
+      <div class="sum-head">
+        <div class="ring" id="bar" role="progressbar" aria-label="Sammlungsfortschritt" aria-valuemin="0" aria-valuemax="100">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="42"/><circle class="fill" id="ringFill" cx="50" cy="50" r="42" pathLength="100"/></svg>
+          <b id="pct">0 %</b>
+        </div>
+        <div class="sum-text">
+          <div class="big"><b id="ownCount">0</b> <span>von <span id="totalCount">0</span></span></div>
+          <div class="sum-label" id="sumLabel">in deiner Sammlung</div>
+        </div>
+      </div>
+      <div class="tiles" id="chips" role="group" aria-label="Anzeigen">
+        <button data-filter="all" aria-pressed="true"><span class="k">Alle</span><b class="n">0</b></button>
+        <button data-filter="owned" aria-pressed="false"><span class="k">Hab ich</span><b class="n">0</b></button>
+        <button data-filter="missing" aria-pressed="false"><span class="k">Fehlen</span><b class="n">0</b></button>
+        <button data-filter="new" aria-pressed="false" id="chipNew" hidden><span class="k">Neu</span><b class="n">0</b></button>
+      </div>
+    </div>
+  </section>
 
   <div class="banner" id="banner" hidden>
     <span id="bannerText"></span>
@@ -67,6 +72,20 @@
   </div>
 
   <main id="list" aria-live="polite"></main>
+
+  <dialog id="filterDlg" class="sheet" aria-label="Filter">
+    <form method="dialog">
+      <h2>Filter</h2>
+      <label class="field" id="countryField">Land<select id="country"></select></label>
+      <label class="field">Jahr<select id="year"></select></label>
+      <label class="field" id="groupField">Sortierung<select id="group">
+        <option value="year">Nach Jahr</option>
+        <option value="country">Nach Land</option>
+      </select></label>
+      <button type="button" id="resetFilters">Filter zurücksetzen</button>
+      <button value="close" class="primary">Fertig</button>
+    </form>
+  </dialog>
 
   <dialog id="menu">
     <form method="dialog">
