@@ -509,6 +509,61 @@
     toastTimer = setTimeout(() => ui.toast.classList.remove('show'), 3200);
   }
 
+  // Alle Fenster über showDialog öffnen: Solange eines offen ist, wird „Ziehen zum Neuladen“ abgeschaltet,
+  // und ein Tipp neben das Fenster (auf den abgedunkelten Bereich) schließt es.
+  function showDialog(d) {
+    document.documentElement.classList.add('modal-open');
+    d.showModal();
+  }
+  document.querySelectorAll('dialog').forEach((d) => {
+    d.addEventListener('close', () => {
+      if (!document.querySelector('dialog[open]')) document.documentElement.classList.remove('modal-open');
+    });
+    d.addEventListener('click', (e) => {
+      if (e.target !== d) return;
+      const r = d.getBoundingClientRect();
+      const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+      if (outside) d.close();
+    });
+  });
+
+  // Filterfenster am Griff nach unten wegziehen.
+  (() => {
+    const sheet = $('#filterDlg');
+    const head = $('#sheetHead');
+    let startY = 0, lastY = 0, lastT = 0, speed = 0, dragging = false;
+    const move = (y) => sheet.style.setProperty('transform', `translateY(${Math.max(0, y - startY)}px)`);
+    head.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      startY = lastY = e.clientY; lastT = e.timeStamp; speed = 0;
+      sheet.classList.remove('settle');
+      sheet.classList.add('dragging');
+      head.setPointerCapture(e.pointerId);
+    });
+    head.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dt = Math.max(1, e.timeStamp - lastT);
+      speed = (e.clientY - lastY) / dt;   // Pixel je Millisekunde
+      lastY = e.clientY; lastT = e.timeStamp;
+      move(e.clientY);
+    });
+    const end = () => {
+      if (!dragging) return;
+      dragging = false;
+      sheet.classList.remove('dragging');
+      sheet.classList.add('settle');
+      const dy = lastY - startY;
+      if (dy > 90 || (dy > 30 && speed > 0.5)) {
+        sheet.style.setProperty('transform', 'translateY(100%)');
+        setTimeout(() => { sheet.close(); sheet.style.removeProperty('transform'); sheet.classList.remove('settle'); }, 200);
+      } else {
+        sheet.style.removeProperty('transform');
+      }
+    };
+    head.addEventListener('pointerup', end);
+    head.addEventListener('pointercancel', end);
+  })();
+
   // Eigener Bestätigungsdialog (confirm() wird in eingebetteten Ansichten nicht angezeigt).
   const askDlg = $('#askDlg');
   function ask(message, yes = 'Ja') {
@@ -517,7 +572,7 @@
       $('#askYes').textContent = yes;
       askDlg.returnValue = '';
       askDlg.addEventListener('close', () => resolve(askDlg.returnValue === 'yes'), { once: true });
-      askDlg.showModal();
+      showDialog(askDlg);
     });
   }
 
@@ -726,7 +781,7 @@
   ui.group.addEventListener('change', () => { state.prefs.group = ui.group.value; savePrefs(); render(); });
   $('#resetFilters').addEventListener('click', resetFilters);
 
-  ui.filterBtn.addEventListener('click', () => { syncControls(); ui.filterDlg.showModal(); });
+  ui.filterBtn.addEventListener('click', () => { syncControls(); showDialog(ui.filterDlg); });
 
   // Suche klappt in der Kopfzeile auf; „Fertig“ leert sie und klappt sie wieder zu.
   ui.searchBtn.addEventListener('click', () => {
@@ -808,7 +863,7 @@
     $('#zoomTitle').textContent = c.t;
     $('#zoomMeta').textContent = `${c.flag} ${c.countryName} · ${c.when}${c.g ? ' · Gemeinschaftsausgabe' : ''}`;
     $('#zoomCredit').replaceChildren(...[creditNode(c.id)].filter(Boolean));
-    zoomDlg.showModal();
+    showDialog(zoomDlg);
   });
   zoomDlg.addEventListener('click', () => zoomDlg.close());
 
@@ -845,7 +900,7 @@
     $('#addYear').value = '';
     $('#addTitle').value = '';
     $('#addOwned').checked = true;
-    addDlg.showModal();
+    showDialog(addDlg);
   });
   $('#addForm').addEventListener('submit', (e) => {
     if (e.submitter && e.submitter.value === 'cancel') return;
@@ -876,7 +931,7 @@
     compose();
   });
 
-  $('#menuBtn').addEventListener('click', () => { updateMenuInfo(); ui.menu.showModal(); });
+  $('#menuBtn').addEventListener('click', () => { updateMenuInfo(); showDialog(ui.menu); });
   $('#syncBtn').addEventListener('click', () => { ui.menu.close(); sync(true); });
   $('#exportBtn').addEventListener('click', exportBackup);
   $('#importBtn').addEventListener('click', () => $('#importFile').click());
