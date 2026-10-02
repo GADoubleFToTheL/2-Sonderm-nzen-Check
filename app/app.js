@@ -18,7 +18,11 @@
     { k: 2, label: '2 €', title: '2 € Sondermünzen' },
     { k: 5, label: '5 €', title: '5 € Kupfermünzen' },
     { k: 25, label: '25 €', title: '25 € Silber-Niob' },
+    { k: 1, label: 'Sätze', title: 'Kursmünzensätze' },
   ];
+  // Ein Kursmünzensatz besteht aus acht Münzen, jede wird einzeln abgehakt.
+  const DENOMS = [['1c', '1 Cent'], ['2c', '2 Cent'], ['5c', '5 Cent'], ['10c', '10 Cent'],
+    ['20c', '20 Cent'], ['50c', '50 Cent'], ['1€', '1 Euro'], ['2€', '2 Euro']];
 
   const $ = (sel) => document.querySelector(sel);
   const el = (tag, cls, text) => {
@@ -101,15 +105,18 @@
   function toCoin(c, countries) {
     const country = countries[c.c];
     const month = c.m ? MONTHS[c.m - 1] : '';
-    const units = country.mm && !c.custom && !c.k
-      ? Object.entries(country.mm).map(([mark, city]) => ({ id: `${c.id}@${mark}`, mark, city }))
-      : null;
+    const units = c.k === 1
+      ? DENOMS.map(([mark, city]) => ({ id: `${c.id}@${mark.replace('€', 'e')}`, mark, city }))
+      : country.mm && !c.custom && !c.k
+        ? Object.entries(country.mm).map(([mark, city]) => ({ id: `${c.id}@${mark}`, mark, city }))
+        : null;
     return {
       id: c.id, c: c.c, y: c.y, m: c.m || 0, t: c.t, units, k: c.k || 2,
       g: c.g === 1, u: c.u === 1, custom: c.custom === true, img: c.i === 1,
       flag: country.f, countryName: country.n,
-      when: month ? `${month} ${c.y}` : String(c.y),
-      search: norm([country.n, c.c, c.y, month, c.t, c.g === 1 ? 'gemeinschaftsausgabe gemeinsame' : '', c.custom ? 'eigene' : ''].join(' ')),
+      when: c.k === 1 ? `ab ${c.y}` : month ? `${month} ${c.y}` : String(c.y),
+      search: norm([country.n, c.c, c.y, month, c.t, c.g === 1 ? 'gemeinschaftsausgabe gemeinsame' : '',
+        c.k === 1 ? 'satz kursmünzen' : '', c.custom ? 'eigene' : ''].join(' ')),
     };
   }
 
@@ -204,7 +211,7 @@
   let singleCountry = false;
   let searchPending = false;
   let searchOpen = false;
-  const groupMode = () => (singleCountry ? 'year' : state.prefs.group);
+  const groupMode = () => (state.prefs.cat === 1 ? 'country' : singleCountry ? 'year' : state.prefs.group);
 
   function groupStats(keyFn) {
     const map = new Map();
@@ -256,7 +263,7 @@
     if (!c.img || (HOST && !spriteAt('t', c.id))) {
       if (c.k === 2) return el('span', 'medal', c.flag);
       const m = el('span', `medal denom d${c.k}`);   // ohne Foto: Wert-Kachel in der Farbe der Münzart
-      m.append(el('b', null, `${c.k} €`), el('span', 'flag-badge', c.flag));
+      m.append(el('b', null, c.k === 1 ? '€' : `${c.k} €`), el('span', 'flag-badge', c.flag));
       return m;
     }
     const b = el('button', 'medal img');
@@ -290,13 +297,13 @@
     info.append(el('span', 'title', c.t), metaFor(c));
     const mints = el('span', 'mints');
     mints.setAttribute('role', 'group');
-    mints.setAttribute('aria-label', 'Prägestätten');
+    mints.setAttribute('aria-label', c.k === 1 ? 'Münzen des Satzes' : 'Prägestätten');
     for (const u of c.units) {
       const b = el('button', 'mint', u.mark);
       b.type = 'button';
       b.dataset.unit = u.id;
       b.title = u.city;
-      b.setAttribute('aria-label', `Prägestätte ${u.mark} (${u.city})`);
+      b.setAttribute('aria-label', c.k === 1 ? u.city : `Prägestätte ${u.mark} (${u.city})`);
       mints.append(b);
     }
     info.append(mints);
@@ -388,7 +395,8 @@
     ui.list.replaceChildren(frag);
     const filterName = { all: 'Alle', owned: 'Hab ich', missing: 'Fehlen', new: 'Neu' }[p.filter];
     const extra = [p.year, p.country && state.countries[p.country]?.n, p.q.trim() && `„${p.q.trim()}“`].filter(Boolean);
-    ui.catSub.textContent = [filterName, ...extra, `${coins.length} ${coins.length === 1 ? 'Münze' : 'Münzen'}`].join(' · ');
+    const noun = p.cat === 1 ? (coins.length === 1 ? 'Satz' : 'Sätze') : (coins.length === 1 ? 'Münze' : 'Münzen');
+    ui.catSub.textContent = [filterName, ...extra, `${coins.length} ${noun}`].join(' · ');
     updateCounts();
     syncControls();
   }
@@ -455,7 +463,8 @@
     const codes = new Set(inThisCat.map((c) => c.c));
     singleCountry = codes.size <= 1;
     $('#countryField').hidden = singleCountry;
-    $('#groupField').hidden = singleCountry;
+    $('#groupField').hidden = singleCountry || state.prefs.cat === 1;   // Sätze stehen immer nach Land
+    $('#yearField').hidden = state.prefs.cat === 1;
     const countries = Object.entries(state.countries)
       .filter(([k]) => codes.has(k))
       .sort((a, b) => a[1].n.localeCompare(b[1].n, 'de'));
@@ -617,7 +626,7 @@
       const haveCustom = new Set(state.custom.map((c) => c.id));
       const custom = (Array.isArray(data.custom) ? data.custom : []).filter((c) => c && typeof c.id === 'string'
         && state.countries[c.c] && Number.isInteger(c.y) && typeof c.t === 'string' && !haveCustom.has(c.id)
-        && (c.k === undefined || c.k === 5 || c.k === 25));
+        && (c.k === undefined || c.k === 1 || c.k === 5 || c.k === 25));
       const fresh = data.owned.filter((id) => (known.has(id) || custom.some((c) => c.id === id)) && !state.owned.has(id)).length;
       if (!(await ask(`${data.owned.length} Münzen in der Sicherung, davon ${fresh} neu für dieses Gerät.\nMit deiner Sammlung zusammenführen?`, 'Zusammenführen'))) return;
       state.custom.push(...custom);

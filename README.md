@@ -3,8 +3,9 @@
 Handy-App zum Nachkontrollieren, welche Euro-Sondermünzen man schon hat. Alle Münzen sind hinterlegt,
 man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
 
-- **Drei Münzarten** (Leiste unten): **2 €** Gedenkmünzen aller Euro-Länder, **5 €** Kupfermünzen und
-  **25 €** Silber-Niob-Münzen der Münze Österreich. Jede Münzart hat ihren eigenen Zähler.
+- **Vier Münzarten** (Leiste unten): **2 €** Gedenkmünzen aller Euro-Länder, **5 €** Kupfermünzen und
+  **25 €** Silber-Niob-Münzen der Münze Österreich sowie **Kursmünzensätze** (1 Cent bis 2 Euro) je Land und
+  Motivserie, jede der acht Münzen einzeln abhakbar. Jede Münzart hat ihren eigenen Zähler.
 - **Alle 2€-Sondermünzen** von 2004 bis heute (24 Länder, inkl. Andorra, Monaco, San Marino, Vatikan)
 - **Motiv jeder Münze als Foto** (antippen = vergrößern), dazu der Ausgabemonat
 - **Abhaken** mit einem Tipp, Fortschrittsanzeige gesamt und je Jahr/Land
@@ -81,7 +82,7 @@ Die ganze Münzliste steht in **`app/data/coins.json`** – eine Münze pro Zeil
 | `m` | Ausgabemonat (1–12), optional |
 | `u` | `1` = Angaben noch nicht bestätigt (wird in der App als „ungeprüft“ angezeigt) |
 | `i` | `1` = es gibt ein Münzbild (siehe unten) |
-| `k` | Münzart: fehlt = 2 €, `5` = 5-€-Kupfermünze, `25` = 25-€-Silber-Niob-Münze. Die ID enthält dann die Münzart, z. B. `AT-2012-5-musikverein`. `y` ist der Jahrgang auf der Münze; `m` nur, wenn das Ausgabejahr gleich dem Jahrgang ist (Neujahrsmünzen erscheinen im Dezember davor). |
+| `k` | Münzart: fehlt = 2 €, `1` = Kursmünzensatz (8 Münzen, ID mit `-satz`, `y` = erstes Jahr der Serie), `5` = 5-€-Kupfermünze, `25` = 25-€-Silber-Niob-Münze. Die ID enthält dann die Münzart, z. B. `AT-2012-5-musikverein`. `y` ist der Jahrgang auf der Münze; `m` nur, wenn das Ausgabejahr gleich dem Jahrgang ist (Neujahrsmünzen erscheinen im Dezember davor). |
 
 **Prägestätten:** Bei einem Land mit Prägestätten steht unter `countries` zusätzlich `"mm"`, z. B. bei Deutschland
 `"mm": {"A": "Berlin", "D": "München", ...}`. Dann gibt es *jede* Münze dieses Landes in allen genannten
@@ -127,6 +128,11 @@ Wird ein Land neu aufgenommen (z. B. Bulgarien, sobald es eine Gedenkmünze gibt
   dieser Münzen gibt es nicht. Dort steht eine Wert-Kachel. Eigene Fotos lassen sich mit
   `tools/make-image.py` einbinden (bei fremden Fotos Eintrag in `app/data/credits.json` nicht vergessen). **Nicht enthalten**: 10-€-Kupfermünzen, Silber-/Goldmünzen, die
   Neujahrsmünze 2027 (Ausgabe 2.12.2026).
+- **Kursmünzensätze (39 Sätze, 312 Münzen):** Je Land und Motivserie, abgeglichen mit den Länderseiten der EZB
+  (ecb.europa.eu/euro/coins/html/…). Mehrere Serien haben Belgien (3), Spanien (3), Frankreich (3), Niederlande (2),
+  Monaco (3), San Marino (2) und Vatikan (5); Bulgarien ist seit 2026 dabei. Deutsche Sätze werden nicht nach
+  Prägestätte unterschieden. Neue Serien, die die EZB noch nicht zeigt (z. B. Luxemburg mit Großherzog Guillaume,
+  Vatikan mit Papst Leo XIV.), fehlen noch. Bild je Satz: die 2-€-Münze der Serie von der EZB.
 - Noch **nicht enthalten** (2 €): Österreich „Beethoven“ (Ausgabe 2027; Proof-Ausgabe ab 2.12.2026), Andorra 2026
   (zwei Münzen, Motive noch nicht bekannt), Bulgarien (die geplante Gedenkmünze wurde blockiert).
 - **Prägestätten:** Die EZB-Beschreibungen nennen für die meisten deutschen Münzen ausdrücklich alle fünf

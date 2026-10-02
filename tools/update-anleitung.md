@@ -35,6 +35,12 @@ Kategorie „Euro coins (25 euro)“ bzw. „Commemorative Euro coins of Austria
 `i` weglassen (die App zeigt dann eine Wert-Kachel). Die API von Wikimedia lehnt viele Abrufe ab (HTTP 429):
 Kategorieseiten und Dateiseiten per `curl` mit eigenem User-Agent und Pausen abrufen.
 
+**Kursmünzensätze (Feld `"k": 1`):** Je Land und Motivserie ein Eintrag (ID `LAND-<erstes Jahr>-satz…`, `y` = erstes
+Jahr der Serie, Titel z. B. „3. Serie – König Philippe“). Quelle: die Länderseiten der EZB
+`https://www.ecb.europa.eu/euro/coins/html/<code>.en.html` (Codes wie `be`, `fr`; Estland `et`, Slowenien `sl`,
+Monaco `mo`). Zeigt eine Länderseite eine neue Serie oder kommt ein neues Euro-Land hinzu, einen Satz ergänzen (Land
+unter `countries` eintragen) und als Bild die 2-€-Münze der Serie von der EZB-Seite mit `tools/make-image.py` erzeugen.
+
 Abgleich mit `coins.json`: nach **Land + Jahr + Motiv** vergleichen (Titel in der Liste sind deutsch, die EZB-Seite
 ist englisch). Eine Münze gilt als „schon drin“, wenn Land, Jahr und Motiv zusammenpassen, auch bei anderer
 Wortwahl. Nie eine Münze doppelt anlegen.
