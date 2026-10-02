@@ -1,7 +1,7 @@
 {
-  "name": "2€ Sondermünzen",
-  "short_name": "2€ Münzen",
-  "description": "Sammlungs-Check für alle 2-Euro-Gedenkmünzen",
+  "name": "Münzalbum",
+  "short_name": "Münzalbum",
+  "description": "Euro-Münzen abhaken: 2-€-Gedenkmünzen, 5 € Kupfer, 25 € Silber-Niob und Kursmünzensätze",
   "lang": "de",
   "start_url": "./",
   "scope": "./",
