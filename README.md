@@ -14,6 +14,12 @@ man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
 - **Sicherung** der Sammlung als Datei (und wieder einspielen)
 - **Fehlende Münze selbst ergänzen**, falls etwas in der Liste fehlt
 
+## Aussehen
+
+Das Design folgt der ElektroSuite: dunkles Farbsystem mit Blau→Cyan-Akzent, Glas-Flächen, abgerundete Ecken,
+feines Raster im Hintergrund. Alle Farben, Radien und Schatten stehen als Variablen am Anfang von
+`app/style.css` (aus deren `theme.css` übernommen). Es gibt nur diese eine dunkle Fassung.
+
 ## Aufs Handy bringen
 
 Die App ist eine „PWA“: eine Webseite, die sich wie eine App installieren lässt. Kein App-Store nötig.

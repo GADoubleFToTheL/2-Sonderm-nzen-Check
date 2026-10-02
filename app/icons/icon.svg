@@ -1,21 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f7d25a"/>
-      <stop offset="1" stop-color="#c9951a"/>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#22d3ee"/>
     </linearGradient>
-    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f1f3f6"/>
-      <stop offset="1" stop-color="#b4bbc7"/>
-    </linearGradient>
+    <radialGradient id="glow" cx=".12" cy="0" r="1">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="1" cy="0" r="1">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="512" height="512" fill="#0b3d91"/>
-  <circle cx="256" cy="256" r="196" fill="url(#gold)"/>
-  <circle cx="256" cy="256" r="196" fill="none" stroke="#a57712" stroke-width="6"/>
-  <circle cx="256" cy="256" r="132" fill="url(#silver)" stroke="#8f98a8" stroke-width="6"/>
-  <text x="256" y="300" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="150" fill="#33415c">2€</text>
-  <g fill="#f7d25a" opacity=".9">
-    <circle cx="256" cy="70" r="7"/><circle cx="256" cy="442" r="7"/>
-    <circle cx="70" cy="256" r="7"/><circle cx="442" cy="256" r="7"/>
-  </g>
+  <rect width="512" height="512" fill="#080d18"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
+  <rect width="512" height="512" fill="url(#glow2)"/>
+  <circle cx="256" cy="256" r="178" fill="url(#g)"/>
+  <circle cx="256" cy="256" r="178" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="6"/>
+  <circle cx="256" cy="256" r="136" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="7"/>
+  <text x="256" y="298" text-anchor="middle" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-weight="800" font-size="132" fill="#fff">2€</text>
 </svg>

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>2€ Sondermünzen</title>
   <meta name="description" content="Sammlungs-Check für alle 2-Euro-Gedenkmünzen">
-  <meta name="theme-color" content="#0b3d91">
-  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#080d18">
+  <meta name="color-scheme" content="dark">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -17,9 +17,13 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="bgfx" aria-hidden="true"></div>
   <header class="top" id="top">
     <div class="row title-row">
-      <h1>2€ Sondermünzen</h1>
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5" stroke-opacity=".55"/><path d="M15.6 8.7a4.5 4.5 0 1 0 0 6.6M7.6 10.6h5.6M7.6 13.4h5"/></svg>
+      </div>
+      <h1 class="name"><span class="a">2€</span><span class="b">Sondermünzen</span></h1>
       <span class="count" id="progressText">…</span>
       <button class="icon-btn" id="menuBtn" aria-label="Menü" aria-haspopup="dialog">
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
@@ -28,14 +32,17 @@
     <div class="bar" role="progressbar" aria-label="Sammlungsfortschritt" aria-valuemin="0" aria-valuemax="100" id="bar"><span id="barFill"></span></div>
 
     <div class="row search-row">
-      <input id="search" type="search" placeholder="Land, Jahr oder Motiv suchen …" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+      <div class="input-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="search" type="search" placeholder="Land, Jahr oder Motiv suchen …" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+      </div>
       <button class="icon-btn" id="filterBtn" aria-label="Filter" aria-expanded="false" aria-controls="filters">
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
         <i class="dot" id="filterDot" hidden></i>
       </button>
     </div>
 
-    <div class="chips" id="chips" role="group" aria-label="Anzeige">
+    <div class="chips seg" id="chips" role="group" aria-label="Anzeige">
       <button data-filter="all" aria-pressed="true">Alle</button>
       <button data-filter="missing" aria-pressed="false">Fehlen</button>
       <button data-filter="owned" aria-pressed="false">Hab ich</button>
