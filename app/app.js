@@ -82,7 +82,7 @@
       : null;
     return {
       id: c.id, c: c.c, y: c.y, m: c.m || 0, t: c.t, units,
-      g: c.g === 1, u: c.u === 1, custom: c.custom === true,
+      g: c.g === 1, u: c.u === 1, custom: c.custom === true, img: c.i === 1,
       flag: country.f, countryName: country.n,
       when: month ? `${month} ${c.y}` : String(c.y),
       search: norm([country.n, c.c, c.y, month, c.t, c.g === 1 ? 'gemeinschaftsausgabe gemeinsame' : '', c.custom ? 'eigene' : ''].join(' ')),
@@ -186,6 +186,24 @@
     return meta;
   }
 
+  // Rundes Münzbild (antippen = vergrößern); ohne Bild die Landesflagge.
+  function medalFor(c) {
+    if (!c.img) return el('span', 'medal', c.flag);
+    const b = el('button', 'medal img');
+    b.type = 'button';
+    b.dataset.zoom = c.id;
+    b.setAttribute('aria-label', `Münzbild vergrößern: ${c.t}`);
+    const im = el('img');
+    im.src = `img/t/${c.id}.webp`;
+    im.alt = '';
+    im.width = 54;
+    im.height = 54;
+    im.loading = 'lazy';
+    im.decoding = 'async';
+    b.append(im, el('span', 'flag-badge', c.flag));
+    return b;
+  }
+
   // Münze mit Prägestätten: ein Schalter je Prägestätte, rechts „alle“.
   function multiRow(c) {
     const li = el('li');
@@ -208,7 +226,7 @@
     const all = el('button', 'all');
     all.type = 'button';
     all.dataset.all = c.id;
-    row.append(el('span', 'medal', c.flag), info);
+    row.append(medalFor(c), info);
     if (state.newIds.has(c.id)) row.append(el('span', 'badge-new', 'NEU'));
     row.append(all);
     li.append(row);
@@ -236,11 +254,10 @@
     input.dataset.id = c.id;
     input.checked = state.owned.has(c.id);
 
-    const medal = el('span', 'medal', c.flag);
     const info = el('span', 'info');
     info.append(el('span', 'title', c.t), metaFor(c));
 
-    label.append(input, medal, info);
+    label.append(input, medalFor(c), info);
     if (state.newIds.has(c.id)) label.append(el('span', 'badge-new', 'NEU'));
     if (c.custom) {
       const del = el('button', 'del', '✕');
@@ -495,6 +512,42 @@
     state.newIds = new Set();
     updateBanner();
     render();
+  });
+
+  /* ---------- Münzbilder ---------- */
+
+  const zoomDlg = $('#zoomDlg');
+  ui.list.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-zoom]');
+    if (!btn) return;
+    e.preventDefault();
+    const c = state.byId.get(btn.dataset.zoom);
+    if (!c) return;
+    const img = $('#zoomImg');
+    img.alt = c.t;
+    img.src = `img/l/${c.id}.webp`;
+    $('#zoomTitle').textContent = c.t;
+    $('#zoomMeta').textContent = `${c.flag} ${c.countryName} · ${c.when}${c.g ? ' · Gemeinschaftsausgabe' : ''}`;
+    zoomDlg.showModal();
+  });
+  zoomDlg.addEventListener('click', () => zoomDlg.close());
+
+  // Alle kleinen Münzbilder einmal laden, damit sie auch offline da sind (der Service Worker merkt sie sich).
+  $('#imgBtn').addEventListener('click', async () => {
+    const queue = state.coins.filter((c) => c.img).map((c) => c.id);
+    const total = queue.length;
+    let done = 0, failed = 0;
+    ui.menu.close();
+    toast(`Lade ${total} Münzbilder …`);
+    const worker = async () => {
+      while (queue.length) {
+        const id = queue.pop();
+        try { const r = await fetch(`img/t/${id}.webp`); if (!r.ok) failed++; } catch { failed++; }
+        if (++done % 150 === 0) toast(`Münzbilder: ${done} / ${total}`);
+      }
+    };
+    await Promise.all(Array.from({ length: 6 }, worker));
+    toast(failed ? `${total - failed} von ${total} Bildern gespeichert – bitte später erneut versuchen.` : `Alle ${total} Münzbilder sind jetzt auch offline da.`);
   });
 
   /* ---------- Eigene Münzen ---------- */

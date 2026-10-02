@@ -25,6 +25,18 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
 
+  // Münzbilder ändern sich praktisch nie: erst aus dem Speicher, im Hintergrund aktualisieren.
+  if (new URL(req.url).pathname.includes('/img/')) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const hit = await cache.match(req);
+      const refresh = fetch(req).then((res) => { if (res.ok) cache.put(req, res.clone()); return res; }).catch(() => undefined);
+      if (hit) { event.waitUntil(refresh); return hit; }
+      return (await refresh) || Response.error();
+    })());
+    return;
+  }
+
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const fallback = async () =>

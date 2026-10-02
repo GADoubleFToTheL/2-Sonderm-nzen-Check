@@ -4,6 +4,7 @@ Handy-App zum Nachkontrollieren, welche 2-Euro-Gedenkmünzen man schon hat. Alle
 man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
 
 - **Alle 2€-Sondermünzen** von 2004 bis heute (24 Länder, inkl. Andorra, Monaco, San Marino, Vatikan)
+- **Motiv jeder Münze als Foto** (antippen = vergrößern), dazu der Ausgabemonat
 - **Abhaken** mit einem Tipp, Fortschrittsanzeige gesamt und je Jahr/Land
 - **Deutsche Münzen nach Prägestätte** (A Berlin, D München, F Stuttgart, G Karlsruhe, J Hamburg): je Münze
   fünf Schalter, dazu ein Knopf „alle“. Gezählt wird pro Prägestätte.
@@ -46,12 +47,23 @@ Die ganze Münzliste steht in **`app/data/coins.json`** – eine Münze pro Zeil
 | `y` | Jahr |
 | `t` | Titel/Motiv |
 | `g` | `1` = Gemeinschaftsausgabe (mehrere Länder, gleiches Motiv) |
+| `m` | Ausgabemonat (1–12), optional |
 | `u` | `1` = Angaben noch nicht bestätigt (wird in der App als „ungeprüft“ angezeigt) |
+| `i` | `1` = es gibt ein Münzbild (siehe unten) |
 
 **Prägestätten:** Bei einem Land mit Prägestätten steht unter `countries` zusätzlich `"mm"`, z. B. bei Deutschland
 `"mm": {"A": "Berlin", "D": "München", ...}`. Dann gibt es *jede* Münze dieses Landes in allen genannten
 Varianten – eine neue deutsche Münze braucht also nichts Besonderes. Die Häkchen werden je Prägestätte unter
 `DE-2026-hb@A`, `DE-2026-hb@D` usw. gespeichert.
+
+**Münzbilder:** Zu jeder Münze gehören zwei Dateien `app/img/t/<ID>.webp` (klein, Liste) und
+`app/img/l/<ID>.webp` (groß, Vergrößerung). Ein neues Foto bereitet dieses Werkzeug vor und setzt dabei
+auch `"i": 1`:
+
+```bash
+pip install pillow
+python3 tools/make-image.py FOTO.jpg DE-2026-hb
+```
 
 Nach dem Eintragen zusätzlich `"updated"` (Datum) oben in der Datei anpassen und `node tools/validate.mjs`
 ausführen – das Skript prüft Format, doppelte IDs und Auffälligkeiten. Sobald die Änderung auf `main` liegt,
@@ -63,29 +75,35 @@ Wird ein Land neu aufgenommen (z. B. Bulgarien, sobald es eine Gedenkmünze gibt
 
 ## Wie verlässlich ist die Liste?
 
-**Stand der Liste: 2. Oktober 2026 – 609 Münzen** (729 Stück, weil jede der 30 deutschen Münzen in fünf Prägestätten vorliegt). Die Daten wurden per Websuche zusammengetragen und gegen
-Gesamtzahlen (z. B. Italien 40, Finnland 39, Belgien 33, Monaco 17, Irland 10) und die erlaubte Zahl
-nationaler Münzen je Land und Jahr gegengeprüft. Amtliche Listen (EZB, EU-Kommission, Wikipedia) waren in der
-Entwicklungsumgebung nicht abrufbar. Deshalb gilt:
+**Stand der Liste: 2. Oktober 2026 – 621 Münzen** (761 Stück, weil jede der 35 deutschen Münzen in fünf
+Prägestätten vorliegt).
 
-- **10 Einträge sind als „ungeprüft“ markiert** (`"u": 1`) – bei denen ist Motiv oder Jahr nicht sicher bestätigt.
-- **Es fehlen vermutlich noch ein paar Münzen** (rechnerisch rund ein Dutzend; Hinweise gibt es u. a. bei
-  Griechenland, Portugal, Spanien). Fehlt bei dir eine, kann sie in der App über
-  *Menü → Fehlende Münze hinzufügen* ergänzt werden.
-- Noch **nicht enthalten** (weil nicht erschienen bzw. Motiv nicht bekannt): Österreich „Beethoven“ (Ausgabe
-  2027; Proof-Ausgabe ab 2.12.2026), die beiden Andorra-Münzen 2026, Bulgarien (geplante Münze wurde
-  blockiert).
-- **Prägestätten:** Ich gehe davon aus, dass jede deutsche 2€-Gedenkmünze in allen fünf Prägestätten geprägt wurde
-  (so ist es bei den mir bekannten Ausgaben). Das ist nicht für jedes Jahr einzeln geprüft.
-  Andere Länder haben ebenfalls Varianten (z. B. Münzmeisterzeichen), die noch nicht unterschieden werden.
+- **2004–2025 (584 Münzen):** Gegen die amtlichen Jahresseiten der Europäischen Zentralbank abgeglichen
+  (ecb.europa.eu/euro/coins/comm): Land, Jahr, Anzahl und Motiv jeder nationalen Münze stimmen überein, die
+  fünf Gemeinschaftsausgaben (2007, 2009, 2012, 2015, 2022) sind vollständig. Jedes Foto wurde mit dem Titel
+  verglichen.
+- **2026 (37 Münzen):** Die EZB hat für 2026 noch keine Seite. Diese Einträge stammen aus Pressemeldungen und
+  sind **nicht amtlich geprüft** und noch **ohne Foto** (dort steht die Landesflagge). Sobald die EZB das
+  Jahr 2026 veröffentlicht, lässt sich das nachholen.
+- Noch **nicht enthalten**: Österreich „Beethoven“ (Ausgabe 2027; Proof-Ausgabe ab 2.12.2026), Andorra 2026
+  (zwei Münzen, Motive noch nicht bekannt), Bulgarien (die geplante Gedenkmünze wurde blockiert).
+- **Prägestätten:** Die EZB-Beschreibungen nennen für die meisten deutschen Münzen ausdrücklich alle fünf
+  Prägestätten (A, D, F, G, J). Bei den übrigen steht dazu nichts, es gilt dieselbe Annahme. Andere Länder
+  haben ebenfalls Varianten (z. B. Münzmeisterzeichen), die noch nicht unterschieden werden.
+- Fehlt dir trotzdem eine Münze, kannst du sie in der App über *Menü → Fehlende Münze hinzufügen* ergänzen.
+
+**Quellen der Münzbilder:** Europäische Zentralbank (ecb.europa.eu, verkleinert und rund zugeschnitten) und
+Europäische Kommission (economy-finance.ec.europa.eu) für Monaco „Carladès“ sowie Vatikan 2024/2025. Die
+Münzmotive gehören den jeweiligen Ausgabeländern.
 
 ## Entwicklung
 
 ```bash
 cd app && python3 -m http.server 8000     # App lokal ansehen: http://localhost:8000
-node tools/validate.mjs                   # Münzliste prüfen
+node tools/validate.mjs                   # Münzliste und Bilder prüfen
 ```
 
 Technik: reines HTML/CSS/JavaScript ohne Build-Schritt. Offline-Betrieb über einen Service Worker
 (`app/sw.js`, „Netz zuerst“: online immer die neueste Version, offline der letzte Stand). Häkchen, eigene
-Münzen und Einstellungen liegen im `localStorage` des Geräts.
+Münzen und Einstellungen liegen im `localStorage` des Geräts. Die Münzbilder werden beim Ansehen und auf
+Wunsch (*Menü → Münzbilder offline speichern*) im Gerät zwischengespeichert.

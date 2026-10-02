@@ -2,7 +2,7 @@
 //   node tools/validate.mjs            -> Prüfung + Zusammenfassung
 // Fehler beenden das Skript mit Exit-Code 1 (blockiert die Veröffentlichung),
 // Hinweise sind nur Warnungen.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -34,12 +34,14 @@ for (const [code, c] of Object.entries(countries)) {
   }
 }
 
-const ALLOWED_KEYS = new Set(['id', 'c', 'y', 'm', 't', 'g', 'u']);
+const ALLOWED_KEYS = new Set(['id', 'c', 'y', 'm', 't', 'g', 'u', 'i']);
+const imgDir = join(dirname(file), '..', 'img');
 const maxYear = new Date().getFullYear() + 1;
 const ids = new Set();
 const perCountryYear = new Map();
 const byYear = new Map();
 const byCountry = new Map();
+let withImg = 0;
 
 if (!Array.isArray(data.coins) || !data.coins.length) err('„coins“ fehlt oder ist leer.');
 
@@ -55,7 +57,12 @@ for (const c of data.coins ?? []) {
   if (Number(c.id.slice(3, 7)) !== c.y) err(`${label}: ID passt nicht zum Jahr ${c.y}.`);
   if (c.m !== undefined && !(Number.isInteger(c.m) && c.m >= 1 && c.m <= 12)) err(`${label}: Monat muss 1–12 sein.`);
   if (typeof c.t !== 'string' || !c.t.trim() || c.t.length > 140) err(`${label}: Titel fehlt oder ist zu lang.`);
-  for (const f of ['g', 'u']) if (c[f] !== undefined && c[f] !== 1) err(`${label}: „${f}“ darf nur 1 sein.`);
+  for (const f of ['g', 'u', 'i']) if (c[f] !== undefined && c[f] !== 1) err(`${label}: „${f}“ darf nur 1 sein.`);
+  // Münzbild: i = 1 setzt voraus, dass beide Dateien da sind (klein: img/t, groß: img/l).
+  const hasFiles = existsSync(join(imgDir, 't', `${c.id}.webp`)) && existsSync(join(imgDir, 'l', `${c.id}.webp`));
+  if (c.i === 1 && !hasFiles) err(`${label}: „i“ ist gesetzt, aber die Bilddateien fehlen (img/t und img/l).`);
+  if (c.i !== 1 && hasFiles) warn(`${label}: Bilddateien vorhanden, aber „i“ fehlt – Bild wird nicht angezeigt.`);
+  if (c.i === 1) withImg++;
 
   byYear.set(c.y, (byYear.get(c.y) ?? 0) + 1);
   byCountry.set(c.c, (byCountry.get(c.c) ?? 0) + 1);
@@ -65,17 +72,18 @@ for (const c of data.coins ?? []) {
   }
 }
 
-// Regel: bis 2012 höchstens eine, ab 2013 höchstens zwei nationale Gedenkmünzen je Land und Jahr
+// Regel: bis 2011 höchstens eine, ab 2012 höchstens zwei nationale Gedenkmünzen je Land und Jahr
 // (Gemeinschaftsausgaben zählen nicht mit). Verstöße sind nur Hinweise – es gibt Sonderfälle.
 for (const [k, n] of perCountryYear) {
   const y = Number(k.split('-')[1]);
-  const limit = y < 2013 ? 1 : 2;
+  const limit = y < 2012 ? 1 : 2;
   if (n > limit) warn(`${k}: ${n} nationale Münzen (üblich: höchstens ${limit}) – bitte prüfen.`);
 }
 
 const unverified = data.coins.filter((c) => c.u).map((c) => c.id);
 const units = data.coins.reduce((n, c) => n + (countries[c.c]?.mm ? Object.keys(countries[c.c].mm).length : 1), 0);
 console.log(`Münzen: ${data.coins.length} (${units} Stück inkl. Prägestätten) · Länder: ${Object.keys(countries).length} · Stand: ${data.updated}`);
+console.log(`Mit Münzbild: ${withImg} von ${data.coins.length}`);
 console.log('Je Jahr:', [...byYear].sort((a, b) => a[0] - b[0]).map(([y, n]) => `${y}:${n}`).join(' '));
 console.log('Je Land:', [...byCountry].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c}:${n}`).join(' '));
 if (unverified.length) console.log(`Als „ungeprüft“ markiert (${unverified.length}): ${unverified.join(', ')}`);

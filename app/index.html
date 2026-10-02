@@ -66,13 +66,21 @@
       <h2>Menü</h2>
       <p class="muted" id="menuInfo"></p>
       <button type="button" id="addBtn">Fehlende Münze hinzufügen</button>
+      <button type="button" id="imgBtn">Münzbilder offline speichern</button>
       <button type="button" id="syncBtn">Nach neuen Münzen suchen</button>
       <button type="button" id="exportBtn">Sammlung sichern (Datei)</button>
       <button type="button" id="importBtn">Sicherung einspielen</button>
       <button type="button" id="resetBtn" class="danger">Alle Häkchen löschen</button>
       <button value="close" class="primary">Schließen</button>
+      <p class="muted small">Münzbilder: © Europäische Zentralbank (ecb.europa.eu) und Europäische Kommission, verkleinert. Die Münzmotive gehören den jeweiligen Ausgabeländern.</p>
     </form>
     <input type="file" id="importFile" accept=".json,application/json" hidden>
+  </dialog>
+
+  <dialog id="zoomDlg" class="zoom" aria-label="Münzbild">
+    <img id="zoomImg" alt="" width="320" height="320">
+    <h2 id="zoomTitle"></h2>
+    <p class="muted" id="zoomMeta"></p>
   </dialog>
 
   <dialog id="addDlg">
