@@ -498,11 +498,14 @@ dialog.sheet {
   border-radius: 24px 24px 0 0; border-bottom: 0;
   padding: 10px 16px calc(16px + env(safe-area-inset-bottom, 0px));
 }
-dialog.sheet::before {
-  content: ""; display: block; width: 40px; height: 4px; margin: 0 auto 12px;
-  border-radius: 99px; background: var(--border-strong);
-}
+/* Griff: Fenster lässt sich nach unten wegziehen (touch-action: none, damit der Browser nicht neu lädt) */
+.sheet-head { margin: -10px -16px 0; padding: 10px 16px 4px; touch-action: none; cursor: grab; }
+.sheet-head .grip { display: block; width: 44px; height: 5px; margin: 0 auto 14px; border-radius: 99px; background: var(--border-strong); }
 dialog.sheet[open] { animation: sheetIn 0.32s var(--ease-out); }
+dialog.sheet.dragging { transition: none; }
+dialog.sheet.settle { transition: transform 0.22s var(--ease-out); }
+/* Solange ein Fenster offen ist: kein „Ziehen zum Neuladen“ */
+html.modal-open, html.modal-open body { overscroll-behavior-y: none; }
 @keyframes sheetIn { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: none; } }
 dialog .field { display: grid; gap: 6px; font-size: 12px; font-weight: 650; letter-spacing: 0.2px; color: var(--text-2); }
 
