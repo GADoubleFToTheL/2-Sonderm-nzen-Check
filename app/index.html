@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>2€ Sondermünzen</title>
+  <meta name="description" content="Sammlungs-Check für alle 2-Euro-Gedenkmünzen">
+  <meta name="theme-color" content="#0b3d91">
+  <meta name="color-scheme" content="light dark">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="2€ Münzen">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top" id="top">
+    <div class="row title-row">
+      <h1>2€ Sondermünzen</h1>
+      <span class="count" id="progressText">…</span>
+      <button class="icon-btn" id="menuBtn" aria-label="Menü" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+      </button>
+    </div>
+    <div class="bar" role="progressbar" aria-label="Sammlungsfortschritt" aria-valuemin="0" aria-valuemax="100" id="bar"><span id="barFill"></span></div>
+
+    <div class="row search-row">
+      <input id="search" type="search" placeholder="Land, Jahr oder Motiv suchen …" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+      <button class="icon-btn" id="filterBtn" aria-label="Filter" aria-expanded="false" aria-controls="filters">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        <i class="dot" id="filterDot" hidden></i>
+      </button>
+    </div>
+
+    <div class="chips" id="chips" role="group" aria-label="Anzeige">
+      <button data-filter="all" aria-pressed="true">Alle</button>
+      <button data-filter="missing" aria-pressed="false">Fehlen</button>
+      <button data-filter="owned" aria-pressed="false">Hab ich</button>
+      <button data-filter="new" aria-pressed="false" id="chipNew" hidden>Neu</button>
+    </div>
+
+    <div class="filters" id="filters" hidden>
+      <select id="country" aria-label="Land"></select>
+      <select id="year" aria-label="Jahr"></select>
+      <select id="group" aria-label="Gruppieren">
+        <option value="year">Je Jahr</option>
+        <option value="country">Je Land</option>
+      </select>
+      <button class="link" id="resetFilters">Filter zurücksetzen</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden>
+    <span id="bannerText"></span>
+    <button id="bannerShow">Anzeigen</button>
+    <button id="bannerOk">Okay</button>
+  </div>
+
+  <main id="list" aria-live="polite"></main>
+
+  <dialog id="menu">
+    <form method="dialog">
+      <h2>Menü</h2>
+      <p class="muted" id="menuInfo"></p>
+      <button type="button" id="addBtn">Fehlende Münze hinzufügen</button>
+      <button type="button" id="syncBtn">Nach neuen Münzen suchen</button>
+      <button type="button" id="exportBtn">Sammlung sichern (Datei)</button>
+      <button type="button" id="importBtn">Sicherung einspielen</button>
+      <button type="button" id="resetBtn" class="danger">Alle Häkchen löschen</button>
+      <button value="close" class="primary">Schließen</button>
+    </form>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+  </dialog>
+
+  <dialog id="addDlg">
+    <form id="addForm" method="dialog">
+      <h2>Münze hinzufügen</h2>
+      <p class="muted">Fehlt eine Münze in der Liste? Trag sie hier ein. Sie wird nur auf diesem Gerät gespeichert und mit der Sicherung gesichert.</p>
+      <select id="addCountry" required aria-label="Land"></select>
+      <input id="addYear" type="number" inputmode="numeric" min="2004" max="2100" placeholder="Jahr (z. B. 2019)" required>
+      <input id="addTitle" type="text" maxlength="120" placeholder="Motiv, z. B. 70 Jahre Bundesrat" required>
+      <label class="check"><input type="checkbox" id="addOwned" checked> Hab ich schon</label>
+      <button class="primary" value="ok">Hinzufügen</button>
+      <button value="cancel" formnovalidate>Abbrechen</button>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <noscript><p class="noscript">Diese App braucht JavaScript.</p></noscript>
+  <script src="app.js"></script>
+</body>
+</html>
