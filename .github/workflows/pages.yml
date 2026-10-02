@@ -33,9 +33,16 @@ jobs:
           node-version: 22
       - run: node tools/validate.mjs
 
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      # Ist Pages noch nicht aktiviert, schlägt dieser Schritt fehl: dann nur ein Hinweis statt rotem Haken.
+      - id: pages
+        uses: actions/configure-pages@v5
+        continue-on-error: true
+      - if: steps.pages.outcome != 'success'
+        run: echo "::warning::GitHub Pages ist noch nicht aktiviert (Settings -> Pages -> Source = GitHub Actions). Danach diesen Workflow erneut starten."
+      - if: steps.pages.outcome == 'success'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: app
       - id: deployment
+        if: steps.pages.outcome == 'success'
         uses: actions/deploy-pages@v4

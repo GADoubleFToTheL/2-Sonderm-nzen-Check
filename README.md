@@ -16,9 +16,9 @@ man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
 
 ## Aussehen
 
-Das Design folgt der ElektroSuite: dunkles Farbsystem mit Blau→Cyan-Akzent, Glas-Flächen, abgerundete Ecken,
+Das Design folgt dem der eigenen Arbeits-Tools: dunkles Farbsystem mit Blau→Cyan-Akzent, Glas-Flächen, abgerundete Ecken,
 feines Raster im Hintergrund. Alle Farben, Radien und Schatten stehen als Variablen am Anfang von
-`app/style.css` (aus deren `theme.css` übernommen). Es gibt nur diese eine dunkle Fassung.
+`app/style.css`. Es gibt nur diese eine dunkle Fassung.
 
 ## Aufs Handy bringen
 
@@ -51,6 +51,14 @@ python3 tools/build-artifact.py            # baut build/artifact/ (index.html + 
 Das Skript packt die runden Münzbilder in Bildtafeln (die Artifact-Grenze liegt bei 511 Dateien) und
 legt Münzliste und Tafel-Index in die Seite. Neue Münzen kommen dort an, indem die Seite mit der
 aktualisierten `coins.json` neu veröffentlicht wird; die Häkchen bleiben dabei erhalten.
+
+## Automatische Updates
+
+Eine geplante Routine in Claude prüft zweimal im Monat, ob es neue 2-Euro-Gedenkmünzen gibt. Sie folgt
+dabei `tools/update-anleitung.md`: Quellen abfragen, `coins.json` ergänzen, Münzbilder erzeugen,
+`node tools/validate.mjs` ausführen und die Änderung nach `main` bringen. Sobald etwas auf `main` landet,
+veröffentlicht der Workflow die neue Liste online; die App holt sie beim nächsten Öffnen und zeigt neue
+Münzen mit **NEU**. Gibt es nichts Neues, passiert nichts.
 
 ## Neue Münzen eintragen
 
