@@ -77,7 +77,7 @@
     <form method="dialog">
       <div class="sheet-head" id="sheetHead"><span class="grip" aria-hidden="true"></span><h2>Filter</h2></div>
       <label class="field" id="countryField">Land<select id="country"></select></label>
-      <label class="field">Jahr<select id="year"></select></label>
+      <label class="field" id="yearField">Jahr<select id="year"></select></label>
       <label class="field" id="groupField">Sortierung<select id="group">
         <option value="year">Nach Jahr</option>
         <option value="country">Nach Land</option>
@@ -99,7 +99,7 @@
       <button type="button" id="importBtn">Sicherung einspielen</button>
       <button type="button" id="resetBtn" class="danger">Alle Häkchen löschen</button>
       <button value="close" class="primary">Schließen</button>
-      <p class="muted small">Münzbilder 2 €: © Europäische Zentralbank (ecb.europa.eu) und Europäische Kommission, verkleinert. Fotos der 25-€-Münzen: Wikimedia Commons (NobbiP, KenzoMogi), CC BY-SA; Nachweis beim Antippen des Bildes. Die Münzmotive gehören den jeweiligen Ausgabeländern.</p>
+      <p class="muted small">Münzbilder 2 € und Kursmünzensätze: © Europäische Zentralbank (ecb.europa.eu) und Europäische Kommission, verkleinert. Fotos der 25-€-Münzen: Wikimedia Commons (NobbiP, KenzoMogi), CC BY-SA; Nachweis beim Antippen des Bildes. Die Münzmotive gehören den jeweiligen Ausgabeländern.</p>
     </form>
     <input type="file" id="importFile" accept=".json,application/json" hidden>
   </dialog>
@@ -120,6 +120,7 @@
         <option value="2">2 € Sondermünze</option>
         <option value="5">5 € Kupfermünze</option>
         <option value="25">25 € Silber-Niob-Münze</option>
+        <option value="1">Kursmünzensatz (1 Cent bis 2 Euro)</option>
       </select>
       <select id="addCountry" required aria-label="Land"></select>
       <input id="addYear" type="number" inputmode="numeric" min="2002" max="2100" placeholder="Jahr (z. B. 2019)" required>
@@ -147,6 +148,9 @@
     </button>
     <button class="tab" data-cat="25" aria-pressed="false">
       <span class="ic">25 €</span><span class="tx"><b>Niob</b><small></small></span><i class="dot" hidden></i>
+    </button>
+    <button class="tab" data-cat="1" aria-pressed="false">
+      <span class="ic">1c–2€</span><span class="tx"><b>Sätze</b><small></small></span><i class="dot" hidden></i>
     </button>
   </nav>
 
