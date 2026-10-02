@@ -34,7 +34,8 @@ for (const [code, c] of Object.entries(countries)) {
   }
 }
 
-const ALLOWED_KEYS = new Set(['id', 'c', 'y', 'm', 't', 'g', 'u', 'i']);
+const ALLOWED_KEYS = new Set(['id', 'c', 'y', 'm', 't', 'g', 'u', 'i', 'k']);
+const KATEGORIEN = new Set([5, 25]); // 'k' fehlt = 2-€-Gedenkmünze; 5 = 5-€-Kupfermünze, 25 = 25-€-Silber-Niob-Münze
 const imgDir = join(dirname(file), '..', 'img');
 const maxYear = new Date().getFullYear() + 1;
 const ids = new Set();
@@ -52,7 +53,9 @@ for (const c of data.coins ?? []) {
   if (ids.has(c.id)) err(`${label}: ID kommt doppelt vor.`);
   ids.add(c.id);
   if (!countries[c.c]) err(`${label}: Land „${c.c}“ ist nicht unter „countries“ eingetragen.`);
-  if (!Number.isInteger(c.y) || c.y < 2004 || c.y > maxYear) err(`${label}: Jahr „${c.y}“ ist unplausibel.`);
+  if (c.k !== undefined && !KATEGORIEN.has(c.k)) err(`${label}: „k“ darf nur 5 oder 25 sein (fehlt = 2 €).`);
+  if (c.k && !c.id.includes(`-${c.k}-`)) warn(`${label}: ID sollte „-${c.k}-“ enthalten (z. B. AT-2012-${c.k}-name).`);
+  if (!Number.isInteger(c.y) || c.y < (c.k ? 2002 : 2004) || c.y > maxYear) err(`${label}: Jahr „${c.y}“ ist unplausibel.`);
   if (c.id.slice(0, 2) !== c.c) err(`${label}: ID passt nicht zum Land „${c.c}“.`);
   if (Number(c.id.slice(3, 7)) !== c.y) err(`${label}: ID passt nicht zum Jahr ${c.y}.`);
   if (c.m !== undefined && !(Number.isInteger(c.m) && c.m >= 1 && c.m <= 12)) err(`${label}: Monat muss 1–12 sein.`);
@@ -66,7 +69,7 @@ for (const c of data.coins ?? []) {
 
   byYear.set(c.y, (byYear.get(c.y) ?? 0) + 1);
   byCountry.set(c.c, (byCountry.get(c.c) ?? 0) + 1);
-  if (!c.g) {
+  if (!c.g && !c.k) {
     const k = `${c.c}-${c.y}`;
     perCountryYear.set(k, (perCountryYear.get(k) ?? 0) + 1);
   }
@@ -81,8 +84,9 @@ for (const [k, n] of perCountryYear) {
 }
 
 const unverified = data.coins.filter((c) => c.u).map((c) => c.id);
-const units = data.coins.reduce((n, c) => n + (countries[c.c]?.mm ? Object.keys(countries[c.c].mm).length : 1), 0);
-console.log(`Münzen: ${data.coins.length} (${units} Stück inkl. Prägestätten) · Länder: ${Object.keys(countries).length} · Stand: ${data.updated}`);
+const units = data.coins.reduce((n, c) => n + (countries[c.c]?.mm && !c.k ? Object.keys(countries[c.c].mm).length : 1), 0);
+const proKat = [2, 5, 25].map((k) => `${k} €: ${data.coins.filter((c) => (c.k ?? 2) === k).length}`).join(' · ');
+console.log(`Münzen: ${data.coins.length} (${units} Stück inkl. Prägestätten) · ${proKat} · Länder: ${Object.keys(countries).length} · Stand: ${data.updated}`);
 console.log(`Mit Münzbild: ${withImg} von ${data.coins.length}`);
 console.log('Je Jahr:', [...byYear].sort((a, b) => a[0] - b[0]).map(([y, n]) => `${y}:${n}`).join(' '));
 console.log('Je Land:', [...byCountry].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c}:${n}`).join(' '));
