@@ -57,6 +57,12 @@ Wortwahl. Nie eine Münze doppelt anlegen.
   `python3 tools/make-image.py foto.jpg <ID>` umwandeln (`pip install pillow`). Das Skript setzt `"i": 1`.
   Fehlt das Bild (EZB zeigt „New image coming soon“), die Münze ohne Bild lassen.
 * **Neues Land** zusätzlich unter `countries` eintragen.
+* **Beschreibung (`app/data/details.json`):** Für jede neue 2-€-Münze den deutschen Text der EZB übernehmen:
+  `https://www.ecb.europa.eu/euro/coins/comm/html/comm_<JAHR>.de.html` (gibt es die deutsche Seite noch nicht, die
+  englische `.en.html` nehmen, sinngetreu übersetzen und `"x": 1` setzen). Eintrag unter `coins`:
+  `"<ID>": {"a": Anlass, "d": Beschreibung, "v": Prägeauflage, "t": Ausgabedatum}` (Felder ohne Angabe weglassen,
+  Text unverändert übernehmen, nur Leerzeichen bereinigen). Achtung: Auf der deutschen Seite passen Bild und Text
+  nicht immer zusammen; am Inhalt prüfen. Bestehende 2026-Münzen ohne Text ergänzen, sobald die EZB-Seite da ist.
 * **Preis-Zuordnung (`app/data/numista.json`):** Nur möglich, wenn die Umgebungsvariable `NUMISTA_API_KEY` gesetzt
   ist (Kopfzeile `Numista-API-Key`, Basis `https://api.numista.com/v3`; Kontingent 2000 Abrufe pro Monat, sparsam
   sein). Für eine neue Münze: `types?issuer=<code>&q=2%20euro&category=coin&count=50` (Codes z. B. `allemagne`,

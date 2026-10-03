@@ -469,18 +469,17 @@
     return meta;
   }
 
-  // Rundes Münzbild (antippen = vergrößern); ohne Bild die Landesflagge.
+  // Rundes Münzbild (antippen = Details); ohne Bild die Landesflagge bzw. eine Wert-Kachel.
   function medalFor(c) {
-    if (!c.img) {
-      if (c.k === 2) return el('span', 'medal', c.flag);
-      const m = el('span', `medal denom d${c.k}`);   // ohne Foto: Wert-Kachel in der Farbe der Münzart
-      m.append(el('b', null, c.k === 1 ? '€' : `${c.k} €`), el('span', 'flag-badge', c.flag));
-      return m;
-    }
-    const b = el('button', 'medal img');
+    const b = el('button', c.img ? 'medal img' : c.k === 2 ? 'medal' : `medal denom d${c.k}`);
     b.type = 'button';
-    b.dataset.zoom = c.id;
-    b.setAttribute('aria-label', `Münzbild vergrößern: ${c.t}`);
+    b.dataset.detail = c.id;
+    b.setAttribute('aria-label', `Details: ${c.t}`);
+    if (!c.img) {
+      if (c.k === 2) b.textContent = c.flag;
+      else b.append(el('b', null, c.k === 1 ? '€' : `${c.k} €`), el('span', 'flag-badge', c.flag));   // Wert-Kachel in der Farbe der Münzart
+      return b;
+    }
     const pic = el('img');
     pic.src = `img/t/${c.id}.webp`;
     pic.alt = '';
@@ -498,7 +497,11 @@
     const row = el('div', 'coin multi');
     row.dataset.coin = c.id;
     const info = el('span', 'info');
-    info.append(el('span', 'title', c.t), metaFor(c), priceNode(c));
+    const main = el('button', 'info-main');
+    main.type = 'button';
+    main.dataset.detail = c.id;
+    main.append(el('span', 'title', c.t), metaFor(c), priceNode(c));
+    info.append(main);
     const mints = el('span', 'mints');
     mints.setAttribute('role', 'group');
     mints.setAttribute('aria-label', c.k === 1 ? 'Münzen des Satzes' : 'Prägestätten');
@@ -533,29 +536,37 @@
     row.querySelectorAll('.mint').forEach((b) => b.setAttribute('aria-pressed', String(state.owned.has(b.dataset.unit))));
   }
 
+  // Einfache Münze: Abhaken nur über das Kästchen rechts, Bild und Text öffnen die Details.
   function coinRow(c) {
     if (c.units) return multiRow(c);
     const li = el('li');
-    const label = el('label', 'coin');
-    const input = el('input');
-    input.type = 'checkbox';
-    input.dataset.id = c.id;
-    input.checked = state.owned.has(c.id);
+    const row = el('div', 'coin');
+    row.dataset.coin = c.id;
+    row.classList.toggle('owned', state.owned.has(c.id));
 
-    const info = el('span', 'info');
+    const info = el('button', 'info');
+    info.type = 'button';
+    info.dataset.detail = c.id;
     info.append(el('span', 'title', c.t), metaFor(c), priceNode(c));
 
-    label.append(input, medalFor(c), info);
-    if (state.newIds.has(c.id)) label.append(el('span', 'badge-new', 'NEU'));
+    row.append(medalFor(c), info);
+    if (state.newIds.has(c.id)) row.append(el('span', 'badge-new', 'NEU'));
     if (c.custom) {
       const del = el('button', 'del', '✕');
       del.type = 'button';
       del.dataset.del = c.id;
       del.setAttribute('aria-label', 'Eigene Münze entfernen');
-      label.append(del);
+      row.append(del);
     }
-    label.append(el('span', 'tick'));
-    li.append(label);
+    const box = el('label', 'tickbox');
+    const input = el('input');
+    input.type = 'checkbox';
+    input.dataset.id = c.id;
+    input.checked = state.owned.has(c.id);
+    input.setAttribute('aria-label', `${c.t} abhaken`);
+    box.append(input, el('span', 'tick'));
+    row.append(box);
+    li.append(row);
     return li;
   }
 
@@ -844,6 +855,7 @@
     if (!(input instanceof HTMLInputElement) || !input.dataset.id) return;
     if (input.checked) state.owned.add(input.dataset.id);
     else state.owned.delete(input.dataset.id);
+    input.closest('.coin')?.classList.toggle('owned', input.checked);
     store.set(KEY.owned, [...state.owned]);
     updateCounts();
     if (navigator.vibrate) navigator.vibrate(8);
@@ -948,22 +960,137 @@
 
   /* ---------- Münzbilder ---------- */
 
+  /* ---------- Detailansicht ---------- */
+
+  // Beschreibungen der EZB (Anlass, Text, Auflage, Ausgabedatum); erst beim ersten Öffnen geladen.
+  let details = null;
+  async function loadDetails() {
+    if (!details) {
+      try {
+        const res = await fetch('data/details.json');
+        if (res.ok) details = (await res.json()).coins || {};
+      } catch { /* ohne Beschreibung weiter */ }
+    }
+    return details || {};
+  }
+
+  function detailText(c, d) {
+    const box = el('div', 'ztext');
+    if (!d) {
+      if (c.k === 1) box.append(el('p', null, 'Kursmünzensatz mit acht Münzen von 1 Cent bis 2 Euro. Jede Münze hakst du einzeln ab.'));
+      return box;
+    }
+    if (d.a && norm(d.a) !== norm(c.t)) {
+      const p = el('p', 'zanlass');
+      p.append(el('span', 'zk', 'Anlass'), d.a);
+      box.append(p);
+    }
+    if (d.d) box.append(el('p', null, d.d));
+    const facts = el('dl', 'zfacts');
+    const fact = (k, v) => { if (v) facts.append(el('dt', null, k), el('dd', null, v)); };
+    fact('Prägeauflage', d.v);
+    fact('Ausgabedatum', d.t);
+    if (facts.childElementCount) box.append(facts);
+    box.append(el('p', 'muted small', `Text: Europäische Zentralbank${d.x ? ' (aus dem Englischen übersetzt)' : ''}`));
+    return box;
+  }
+
   const zoomDlg = $('#zoomDlg');
-  ui.list.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-zoom]');
-    if (!btn) return;
-    e.preventDefault();
-    const c = state.byId.get(btn.dataset.zoom);
-    if (!c) return;
+  let detailFor = '';
+  async function openDetail(c) {
+    detailFor = c.id;
     const img = $('#zoomImg');
-    img.alt = c.t;
-    img.src = `img/l/${c.id}.webp`;
+    img.hidden = !c.img;
+    if (c.img) { img.alt = c.t; img.src = `img/l/${c.id}.webp`; } else img.removeAttribute('src');
+    const tile = $('#zoomTile');
+    tile.hidden = c.img;
+    if (!c.img) {
+      const m = medalFor(c);
+      m.removeAttribute('data-detail');
+      m.tabIndex = -1;
+      tile.replaceChildren(m);
+    }
     $('#zoomTitle').textContent = c.t;
     $('#zoomMeta').textContent = `${c.flag} ${c.countryName} · ${c.when}${c.g ? ' · Gemeinschaftsausgabe' : ''}`;
-    $('#zoomCredit').replaceChildren(...[priceDetail(c), creditNode(c.id)].filter(Boolean));
-    showDialog(zoomDlg);
+    const have = ownedCount(c), n = unitCount(c);
+    const status = $('#zoomStatus');
+    status.textContent = n === 1 ? (have ? '✓ In deiner Sammlung' : 'Fehlt noch')
+      : `${have} von ${n} ${c.k === 1 ? 'Münzen' : 'Prägestätten'} in deiner Sammlung`;
+    status.classList.toggle('have', have > 0);
+    $('#zoomText').replaceChildren(...(c.k === 2 && !c.custom && !details ? [el('p', 'muted small', 'Beschreibung wird geladen …')] : []));
+    $('#zoomPrice').replaceChildren(...[priceDetail(c)].filter(Boolean));
+    $('#zoomCredit').replaceChildren(...[creditNode(c.id)].filter(Boolean));
+    zoomDlg.scrollTop = 0;
+    if (!zoomDlg.open) showDialog(zoomDlg);
+    const all = await loadDetails();
+    if (detailFor === c.id) $('#zoomText').replaceChildren(detailText(c, all[c.id]));
+  }
+
+  ui.list.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-detail]');
+    if (!btn) return;
+    e.preventDefault();
+    const c = state.byId.get(btn.dataset.detail);
+    if (c) openDetail(c);
   });
-  zoomDlg.addEventListener('click', () => zoomDlg.close());
+  // Antippen des Bildes schließt; Links bleiben bedienbar.
+  zoomDlg.addEventListener('click', (e) => { if (e.target.closest('#zoomImg, #zoomTile')) zoomDlg.close(); });
+
+  // Nach oben oder unten wischen schließt die Detailansicht. Ist der Text länger als das Fenster,
+  // wird erst gescrollt; am oberen bzw. unteren Ende zieht das Wischen das Fenster mit.
+  (() => {
+    const dlg = zoomDlg;
+    let y0 = 0, t0 = 0, dy = 0, mode = '';
+    const reset = () => {
+      dlg.classList.remove('dragging', 'settle');
+      dlg.style.removeProperty('transform');
+      dlg.style.removeProperty('opacity');
+    };
+    dlg.addEventListener('close', reset);
+    dlg.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) { mode = ''; return; }
+      y0 = e.touches[0].clientY; t0 = e.timeStamp; dy = 0; mode = '';
+    }, { passive: true });
+    dlg.addEventListener('touchmove', (e) => {
+      if (e.touches.length !== 1) return;
+      const y = e.touches[0].clientY;
+      if (!mode) {
+        const d = y - y0;
+        if (Math.abs(d) < 6) return;
+        const scrollable = dlg.scrollHeight > dlg.clientHeight + 1;
+        const atTop = dlg.scrollTop <= 0;
+        const atEnd = dlg.scrollTop + dlg.clientHeight >= dlg.scrollHeight - 1;
+        mode = !scrollable || (d > 0 && atTop) || (d < 0 && atEnd) ? 'drag' : 'scroll';
+        if (mode === 'drag') { y0 = y; t0 = e.timeStamp; dlg.classList.remove('settle'); dlg.classList.add('dragging'); }
+      }
+      if (mode !== 'drag') return;
+      e.preventDefault();
+      dy = y - y0;
+      dlg.style.setProperty('transform', `translateY(${dy}px)`);
+      dlg.style.setProperty('opacity', String(Math.max(0.25, 1 - Math.abs(dy) / 420)));
+    }, { passive: false });
+    const end = (e) => {
+      if (mode !== 'drag') { mode = ''; return; }
+      mode = '';
+      const speed = Math.abs(dy) / Math.max(1, e.timeStamp - t0);
+      dlg.classList.remove('dragging');
+      dlg.classList.add('settle');
+      if (Math.abs(dy) > 70 || (Math.abs(dy) > 20 && speed > 0.5)) {
+        dlg.style.setProperty('transform', `translateY(${dy > 0 ? '' : '-'}70vh)`);
+        dlg.style.setProperty('opacity', '0');
+        setTimeout(() => dlg.close(), 180);
+      } else {
+        dlg.style.removeProperty('transform');
+        dlg.style.removeProperty('opacity');
+      }
+    };
+    dlg.addEventListener('touchend', end);
+    dlg.addEventListener('touchcancel', end);
+    // Mausrad (Computer): ohne Scrollbereich schließt Drehen das Fenster.
+    dlg.addEventListener('wheel', (e) => {
+      if (dlg.scrollHeight <= dlg.clientHeight + 1 && Math.abs(e.deltaY) > 10) dlg.close();
+    }, { passive: true });
+  })();
 
   // Alle kleinen Münzbilder einmal laden, damit sie auch offline da sind (der Service Worker merkt sie sich).
   $('#imgBtn').addEventListener('click', async () => {
