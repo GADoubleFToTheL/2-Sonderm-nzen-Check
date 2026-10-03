@@ -58,8 +58,9 @@ numista.com → API → Schlüssel anfordern), und die App holt die Preise selbs
 - `app/data/numista.json` ordnet jeder Münze (bei Deutschland jeder Prägestätte, bei Sätzen jeder der acht Münzen)
   die Numista-Typnummer und Ausgabenummer zu. Diese Nummern darf man dauerhaft speichern.
 - Der kostenlose Zugang erlaubt **2000 Abrufe pro Kalendermonat**. Ein Abruf liefert alle Erhaltungsgrade einer
-  Ausgabe; für alle Münzen sind es rund 1100 Abrufe. Die App frischt jeden Preis nach 30 Tagen auf, abgehakte Münzen
-  zuerst. Ist das Kontingent aufgebraucht, wartet sie bis zum nächsten Monat.
+  Ausgabe; für alle Münzen sind es rund 1100 Abrufe. Die App lädt abgehakte Münzen zuerst und frischt ihre Preise
+  nach 30 Tagen auf, alle anderen nach 90 Tagen. Ist das Kontingent aufgebraucht, wartet sie bis zum nächsten Monat.
+  „Schlüssel entfernen“ löscht nur den Schlüssel, die geladenen Preise bleiben auf dem Gerät.
 - Angezeigt wird: in der Liste „Umlauf“ und „Bankfrisch“ (bei deutschen Münzen der niedrigste Preis der
   Prägestätten mit „ab“, bei Sätzen die Summe der acht Münzen), beim Antippen des Bildes die Tabelle je Prägestätte
   bzw. Satz-Münze mit Link zu Numista, oben der Wert der abgehakten Münzen der gewählten Münzart.
