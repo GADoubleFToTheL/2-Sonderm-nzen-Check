@@ -40,7 +40,9 @@ Die App ist eine „PWA“: eine Webseite, die sich wie eine App installieren l�
    *(Pages in privaten Repos gibt es nur mit bezahltem GitHub-Tarif. Alternativ den Ordner `app/`
    bei Netlify Drop oder Cloudflare Pages hochladen.)*
 2. **Auf dem Handy öffnen** und installieren:
-   - **Android (Chrome):** Menü ⋮ → *App installieren* bzw. *Zum Startbildschirm hinzufügen*
+   - **Android (Chrome):** in der App *Menü → App auf dem Handy installieren* (erscheint, sobald Chrome die
+     Installation anbietet) oder Chrome-Menü ⋮ → *App installieren* bzw. *Zum Startbildschirm hinzufügen*.
+     Xiaomi/Redmi/POCO: Chrome braucht die Berechtigung „Verknüpfungen auf dem Startbildschirm erstellen“.
    - **iPhone (Safari):** Teilen-Symbol → *Zum Home-Bildschirm*
 
 Die Häkchen liegen nur auf dem jeweiligen Gerät. Mit *Menü → Sammlung sichern* lässt sich eine
