@@ -106,6 +106,15 @@ for (const [id, v] of Object.entries(numista.units ?? {})) {
   if (!allUnits.has(id)) err(`numista.json: „${id}“ ist keine Münze (bzw. Prägestätte/Satz-Münze) in coins.json.`);
   if (!Array.isArray(v) || v.length !== 2 || !v.every((x) => Number.isInteger(x) && x > 0)) err(`numista.json: „${id}“ braucht [Typ-Nr., Ausgabe-Nr.].`);
 }
+// Beschreibungen (EZB): jeder Schlüssel muss eine Münze sein.
+let detailsDoc = { coins: {} };
+try { detailsDoc = JSON.parse(readFileSync(join(dirname(file), 'details.json'), 'utf8')); } catch { err('data/details.json fehlt oder ist kein gültiges JSON.'); }
+for (const [id, v] of Object.entries(detailsDoc.coins ?? {})) {
+  if (!ids.has(id)) err(`details.json: „${id}“ ist keine Münze in coins.json.`);
+  if (!v || typeof v !== 'object' || !['a', 'd', 'v', 't'].some((k) => typeof v[k] === 'string' && v[k])) err(`details.json: „${id}“ braucht mindestens eines der Felder a, d, v, t.`);
+}
+const noText = data.coins.filter((c) => !c.k && !detailsDoc.coins?.[c.id]?.d).map((c) => c.id);
+
 const noPrice = data.coins.filter((c) => !unitIdsOf(c).some((u) => numista.units?.[u])).map((c) => c.id);
 
 const unverified = data.coins.filter((c) => c.u).map((c) => c.id);
@@ -116,6 +125,7 @@ console.log(`Mit Münzbild: ${withImg} von ${data.coins.length}`);
 console.log('Je Jahr:', [...byYear].sort((a, b) => a[0] - b[0]).map(([y, n]) => `${y}:${n}`).join(' '));
 console.log('Je Land:', [...byCountry].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c}:${n}`).join(' '));
 if (unverified.length) console.log(`Als „ungeprüft“ markiert (${unverified.length}): ${unverified.join(', ')}`);
+if (noText.length) console.log(`2 € ohne Beschreibung (${noText.length}): ${noText.join(', ')}`);
 if (noPrice.length) console.log(`Ohne Numista-Zuordnung, also ohne Preis (${noPrice.length}): ${noPrice.join(', ')}`);
 for (const w of warnings) console.warn(`Hinweis: ${w}`);
 for (const e of errors) console.error(`FEHLER: ${e}`);

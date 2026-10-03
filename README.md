@@ -7,8 +7,10 @@ man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
   **25 €** Silber-Niob-Münzen der Münze Österreich sowie **Kursmünzensätze** (1 Cent bis 2 Euro) je Land und
   Motivserie, jede der acht Münzen einzeln abhakbar. Jede Münzart hat ihren eigenen Zähler.
 - **Alle 2€-Sondermünzen** von 2004 bis heute (24 Länder, inkl. Andorra, Monaco, San Marino, Vatikan)
-- **Motiv jeder Münze als Foto** (antippen = vergrößern), dazu der Ausgabemonat
-- **Abhaken** mit einem Tipp, Fortschrittsanzeige gesamt und je Jahr/Land
+- **Motiv jeder Münze als Foto**, dazu der Ausgabemonat
+- **Abhaken** mit einem Tipp auf das Kästchen rechts, Fortschrittsanzeige gesamt und je Jahr/Land
+- **Details** beim Antippen von Bild oder Text: großes Bild, Beschreibung, Prägeauflage und Ausgabedatum (Texte der
+  EZB, `app/data/details.json`), Preise und Bildnachweis. Nach oben oder unten wischen schließt die Ansicht.
 - **Deutsche Münzen nach Prägestätte** (A Berlin, D München, F Stuttgart, G Karlsruhe, J Hamburg): je Münze
   fünf Schalter, dazu ein Knopf „alle“. Gezählt wird pro Prägestätte.
 - **Suchen & filtern**: nach Land, Jahr, Motiv; „Fehlen“ / „Hab ich“; Gruppierung nach Jahr oder Land
