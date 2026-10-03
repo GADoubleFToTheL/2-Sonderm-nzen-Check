@@ -142,7 +142,11 @@
   // Schätzpreise von Numista, abgerufen mit dem eigenen Schlüssel. Welche Münze zu welcher Numista-Nummer gehört, steht
   // in data/numista.json; die Preise selbst bleiben nur auf diesem Gerät (so verlangen es die Bedingungen von Numista).
   const NUMISTA_API = 'https://api.numista.com/v3';
-  const PRICE_TTL_MS = 30 * 24 * 60 * 60 * 1000;   // Preise einmal im Monat auffrischen
+  // Auffrischen: abgehakte Münzen nach 30 Tagen, alle anderen nach 90 Tagen. So bleibt die App mit rund
+  // 1100 Preisen deutlich unter dem Monatskontingent von Numista (2000 Abrufe je Kalendermonat).
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const PRICE_TTL_OWNED_MS = 30 * DAY_MS;
+  const PRICE_TTL_OTHER_MS = 90 * DAY_MS;
   const euroFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
   const euroFmt0 = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
   const fmtEuro = (v) => (v >= 100 ? euroFmt0 : euroFmt).format(v);
@@ -277,7 +281,8 @@
         if (!k || seen.has(k)) continue;
         seen.add(k);
         const p = state.prices[k];
-        if (!p || now - p[2] > PRICE_TTL_MS) q.push(k);
+        const ttl = state.owned.has(id) ? PRICE_TTL_OWNED_MS : PRICE_TTL_OTHER_MS;
+        if (!p || now - p[2] > ttl) q.push(k);
       }
       return q;
     }
@@ -315,13 +320,16 @@
       let done = 0, painted = Date.now();
       try {
         for (const k of q) {
+          if (store.get(KEY.nkey, '') !== apiKey) break;   // Schlüssel entfernt oder geändert: aufhören
           state.prices[k] = await fetchOne(k, apiKey);
-          if (++done % 20 === 0) store.set(KEY.prices, state.prices);
+          if (++done % 5 === 0) store.set(KEY.prices, state.prices);
           if (Date.now() - painted > 1500) { paintPrices(); updatePriceInfo(); painted = Date.now(); }
           await new Promise((r) => setTimeout(r, 250));
         }
-        setMeta({ last: Date.now() });
-        if (manual) toast('Preise sind geladen.');
+        if (store.get(KEY.nkey, '') === apiKey) {
+          setMeta({ last: Date.now() });
+          if (manual) toast('Preise sind geladen.');
+        }
       } catch (e) {
         if (e.code === 'quota') {
           setMeta({ blocked: thisMonth(), last: Date.now() });
@@ -1173,12 +1181,12 @@
     if (e.key === 'Enter') { e.preventDefault(); $('#priceKeySave').click(); }
   });
   $('#priceRefresh').addEventListener('click', () => priceLoader.run(true));
+  // Entfernt nur den Schlüssel. Schon geladene Preise bleiben gespeichert (ausgeblendet), damit ein neu
+  // eingetragener Schlüssel nicht alles noch einmal abrufen muss.
   $('#priceKeyDel').addEventListener('click', async () => {
-    if (!(await ask('Numista-Schlüssel und gespeicherte Preise von diesem Gerät löschen?', 'Löschen'))) return;
+    if (!(await ask('Numista-Schlüssel von diesem Gerät entfernen?\nDie schon geladenen Preise bleiben gespeichert.', 'Entfernen'))) return;
     try { localStorage.removeItem(KEY.nkey); } catch { /* nicht möglich */ }
-    state.prices = {};
-    store.set(KEY.prices, {});
-    store.set(KEY.pmeta, {});
+    store.set(KEY.prices, state.prices);
     paintPrices();
     updatePriceInfo();
   });
