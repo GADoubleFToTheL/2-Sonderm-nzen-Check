@@ -1,6 +1,6 @@
 // Network-first: online gibt es immer die neueste App und Münzliste,
 // offline wird auf den zuletzt gespeicherten Stand zurückgegriffen.
-const CACHE = 'euro2-v8';
+const CACHE = 'euro2-v9';
 const SHELL = [
   './', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'data/coins.json', 'data/credits.json', 'data/numista.json', 'data/details.json',

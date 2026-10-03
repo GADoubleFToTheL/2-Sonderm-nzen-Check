@@ -1216,4 +1216,23 @@
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
+
+  // Installieren: Chrome (Android) meldet mit „beforeinstallprompt“, dass die Seite als App installiert werden kann.
+  // Dann erscheint im Menü ein eigener Knopf dafür. Ist die App schon installiert, kommt das Ereignis nicht.
+  let installPrompt = null;
+  const installBtn = $('#installBtn');
+  window.addEventListener('beforeinstallprompt', (e) => { installPrompt = e; installBtn.hidden = false; });
+  window.addEventListener('appinstalled', () => {
+    installPrompt = null;
+    installBtn.hidden = true;
+    toast('App installiert – du findest sie auf dem Startbildschirm.');
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!installPrompt) return;
+    ui.menu.close();
+    const p = installPrompt;
+    installPrompt = null;
+    installBtn.hidden = true;   // Chrome erlaubt die Abfrage nur einmal je Laden der Seite
+    try { await p.prompt(); } catch { toast('Installieren ging nicht – bitte über das Chrome-Menü versuchen.'); }
+  });
 })();
