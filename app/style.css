@@ -257,6 +257,38 @@ option, optgroup { background: var(--surface-2); color: var(--text); }
 .tiles button[aria-pressed="true"] .k { color: var(--cat); }
 .tiles [data-filter="new"] .n { color: var(--accent-cyan); }
 
+/* Länderleiste unter der Übersicht: alle Flaggen der Münzart, antippen filtert nach Land */
+.flags {
+  margin-top: 10px; padding: 10px 10px 10px;
+  border-radius: var(--r-lg); border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012));
+}
+.flags-head {
+  display: flex; align-items: center; justify-content: space-between; min-height: 24px; margin: 0 4px 8px;
+  font-size: 11px; font-weight: 750; letter-spacing: .8px; text-transform: uppercase; color: var(--text-3);
+}
+.flags-head button {
+  border: 0; background: none; padding: 2px 0; font: inherit; font-size: 12.5px; font-weight: 650;
+  letter-spacing: 0; text-transform: none; color: var(--info); cursor: pointer;
+}
+.flag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 6px; }
+.flag {
+  display: grid; justify-items: center; gap: 3px; padding: 6px 0 5px; min-width: 0;
+  border-radius: 11px; border: 1px solid var(--border); background: rgba(0, 0, 0, 0.18);
+  color: var(--text-3); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background .16s var(--ease), border-color .16s var(--ease), opacity .16s var(--ease);
+}
+.flag .fl { font-size: 23px; line-height: 1; }
+.flag .fn { font-size: 9.5px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.2px; white-space: nowrap; }
+.flag.done .fn { color: var(--success); }
+.flag:active { background: rgba(255, 255, 255, 0.08); }
+.flag[aria-pressed="true"] {
+  border-color: var(--cat); color: var(--text);
+  background: color-mix(in srgb, var(--cat) 18%, transparent);
+  box-shadow: 0 0 0 1px var(--cat), 0 6px 16px color-mix(in srgb, var(--cat) 28%, transparent);
+}
+.flag-grid:has([aria-pressed="true"]) .flag:not([aria-pressed="true"]) { opacity: .5; }
+
 /* ---------- Hinweis „Neu“ ---------- */
 .banner {
   position: relative; z-index: 1;
