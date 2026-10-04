@@ -82,6 +82,7 @@
     banner: $('#banner'), bannerText: $('#bannerText'),
     menu: $('#menu'), menuInfo: $('#menuInfo'), toast: $('#toast'), top: $('#top'),
     worth: $('#worth'), priceInfo: $('#priceInfo'), priceKey: $('#priceKey'),
+    flagsBox: $('#flagsBox'), flagGrid: $('#flagGrid'), flagsAll: $('#flagsAll'),
   };
 
   /* ---------- Daten ---------- */
@@ -659,6 +660,34 @@
       if (s) node.textContent = `${s.own} / ${s.n}`;
     });
     paintWorth();
+    paintFlags();
+  }
+
+  // Länderleiste: alle Flaggen der Münzart mit „abgehakt/gesamt“. Antippen zeigt nur dieses Land,
+  // nochmal antippen (oder „Alle Länder zeigen“) wieder alle.
+  function buildFlags(countries) {
+    ui.flagsBox.hidden = countries.length <= 1;
+    ui.flagGrid.replaceChildren(...countries.map(([code, v]) => {
+      const b = el('button', 'flag');
+      b.type = 'button';
+      b.dataset.country = code;
+      b.title = v.n;
+      b.setAttribute('aria-label', v.n);
+      b.append(el('span', 'fl', v.f), el('small', 'fn'));
+      return b;
+    }));
+  }
+
+  function paintFlags() {
+    if (ui.flagsBox.hidden) return;
+    const stats = groupStats((c) => c.c);
+    ui.flagGrid.querySelectorAll('.flag').forEach((b) => {
+      const s = stats.get(b.dataset.country) || { n: 0, own: 0 };
+      b.querySelector('.fn').textContent = `${s.own}/${s.n}`;
+      b.classList.toggle('done', s.n > 0 && s.own === s.n);
+      b.setAttribute('aria-pressed', String(state.prefs.country === b.dataset.country));
+    });
+    ui.flagsAll.hidden = !state.prefs.country;
   }
 
   function updateBanner() {
@@ -703,6 +732,7 @@
     };
     const eu = countries.filter(([, v]) => !v.s).map(([k, v]) => [k, `${v.f} ${v.n}`]);
     const small = countries.filter(([, v]) => v.s).map(([k, v]) => [k, `${v.f} ${v.n}`]);
+    buildFlags([...countries.filter(([, v]) => !v.s), ...countries.filter(([, v]) => v.s)]);
     fill(ui.country, 'Alle Länder', [['Euro-Länder', eu], ['Kleinstaaten mit Euro', small]]);
     const years = [...new Set(inThisCat.map((c) => c.y))].sort((a, b) => b - a).map((y) => [String(y), String(y)]);
     fill(ui.year, 'Alle Jahre', [['', years]]);
@@ -909,6 +939,14 @@
   });
 
   ui.country.addEventListener('change', () => { state.prefs.country = ui.country.value; savePrefs(); render(); });
+  ui.flagGrid.addEventListener('click', (e) => {
+    const b = e.target.closest('.flag');
+    if (!b) return;
+    state.prefs.country = state.prefs.country === b.dataset.country ? '' : b.dataset.country;
+    savePrefs();
+    render();
+  });
+  ui.flagsAll.addEventListener('click', () => { state.prefs.country = ''; savePrefs(); render(); });
   ui.year.addEventListener('change', () => { state.prefs.year = ui.year.value; savePrefs(); render(); });
   ui.group.addEventListener('change', () => { state.prefs.group = ui.group.value; savePrefs(); render(); });
   $('#resetFilters').addEventListener('click', resetFilters);

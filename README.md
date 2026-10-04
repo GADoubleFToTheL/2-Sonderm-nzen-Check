@@ -13,6 +13,7 @@ man hakt ab, was man besitzt – und sieht sofort, was noch fehlt.
   EZB, `app/data/details.json`), Preise und Bildnachweis. Nach oben oder unten wischen schließt die Ansicht.
 - **Deutsche Münzen nach Prägestätte** (A Berlin, D München, F Stuttgart, G Karlsruhe, J Hamburg): je Münze
   fünf Schalter, dazu ein Knopf „alle“. Gezählt wird pro Prägestätte.
+- **Länderleiste** unter der Übersicht: alle Flaggen mit „abgehakt/gesamt“, ein Tipp zeigt nur dieses Land
 - **Suchen & filtern**: nach Land, Jahr, Motiv; „Fehlen“ / „Hab ich“; Gruppierung nach Jahr oder Land
 - **Neue Münzen erscheinen automatisch** und werden mit **NEU** markiert
 - **Funktioniert offline** und lässt sich wie eine normale App aufs Handy legen (Android & iPhone)
