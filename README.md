@@ -37,7 +37,9 @@ Die App ist eine „PWA“: eine Webseite, die sich wie eine App installieren l�
 1. **Einmalig veröffentlichen:** Diesen Branch nach `main` mergen und auf GitHub unter
    *Settings → Pages → Build and deployment → Source* **„GitHub Actions“** wählen. Der Workflow
    „App veröffentlichen“ (`.github/workflows/pages.yml`) legt die App dann online. Die Adresse
-   steht danach unter *Settings → Pages* (`https://<name>.github.io/2-Sonderm-nzen-Check/`).
+   steht danach unter *Settings → Pages* (`https://gadoubleftothel.github.io/Euro-Muenzalbum/`). Wird das Repo
+   umbenannt, ändert sich diese Adresse; die alte zeigt dann „404“, die App muss neu installiert werden
+   (Häkchen, Schlüssel und Preise bleiben erhalten, weil sie an `gadoubleftothel.github.io` hängen).
    *(Pages in privaten Repos gibt es nur mit bezahltem GitHub-Tarif. Alternativ den Ordner `app/`
    bei Netlify Drop oder Cloudflare Pages hochladen.)*
 2. **Auf dem Handy öffnen** und installieren:
