@@ -2,6 +2,7 @@
 """Münzbild für die App vorbereiten.
 
     python3 tools/make-image.py FOTO.jpg DE-2026-hb
+    python3 tools/make-image.py RUECKSEITE.png AT-2026-25-quanten --seite2
 
 Erzeugt app/img/t/<ID>.webp (klein, für die Liste) und app/img/l/<ID>.webp (groß, für die
 Vergrößerung), jeweils rund ausgeschnitten, und setzt in app/data/coins.json bei dieser Münze
@@ -10,6 +11,9 @@ z. B. vom IMM) behalten ihren natürlichen Umriss, damit siebeneckige 5-€-Mün
 
 Quadratische Münzfotos werden unverändert verkleinert, Querformat-Bilder (z. B. 3:2-Renderings der
 EU-Kommission) in der Mitte quadratisch ausgeschnitten, alles andere mit Weiß aufgefüllt.
+
+Mit --seite2 wird das Bild als zweite Münzseite gespeichert (<ID>_2.webp, bei 25 € die andere Seite)
+und "b": 1 gesetzt; die App zeigt dann beide Seiten nebeneinander. Das erste Bild muss es schon geben.
 Benötigt:  pip install pillow
 """
 import json
@@ -43,9 +47,13 @@ def circle_mask(size: int) -> Image.Image:
 
 
 def main() -> None:
-    if len(sys.argv) != 3:
+    args = sys.argv[1:]
+    side2 = "--seite2" in args
+    if side2:
+        args.remove("--seite2")
+    if len(args) != 2:
         sys.exit(__doc__)
-    src, coin_id = Path(sys.argv[1]), sys.argv[2]
+    src, coin_id = Path(args[0]), args[1]
     if not re.fullmatch(r"[A-Z]{2}-\d{4}-[a-z0-9-]+", coin_id):
         sys.exit(f"Ungültige Münz-ID: {coin_id}")
 
@@ -57,6 +65,9 @@ def main() -> None:
     line = next((l for l in text.splitlines() if f'"id": "{coin_id}"' in l), None)
     if line is None:
         sys.exit(f"{coin_id} steht nicht in app/data/coins.json – erst die Münze eintragen.")
+    if side2 and '"i": 1' not in line:
+        sys.exit(f"{coin_id} hat noch kein erstes Bild – erst ohne --seite2 aufrufen.")
+    name = f"{coin_id}_2" if side2 else coin_id
 
     raw = Image.open(src)
     alpha = raw.convert("RGBA").getchannel("A")
@@ -73,14 +84,15 @@ def main() -> None:
         out = im.resize((size, size), Image.LANCZOS).convert("RGBA")
         if not cut_out:
             out.putalpha(circle_mask(size))
-        target = ROOT / "img" / folder / f"{coin_id}.webp"
+        target = ROOT / "img" / folder / f"{name}.webp"
         target.parent.mkdir(parents=True, exist_ok=True)
         out.save(target, "WEBP", quality=quality, method=4)
         print(f"geschrieben: {target.relative_to(ROOT.parent)}")
 
-    if '"i": 1' not in line:
-        data_file.write_text(text.replace(line, re.sub(r"\}(,?)$", r', "i": 1}\1', line)), encoding="utf-8")
-        print('coins.json: "i": 1 gesetzt')
+    flag = '"b": 1' if side2 else '"i": 1'
+    if flag not in line:
+        data_file.write_text(text.replace(line, re.sub(r"\}(,?)$", f", {flag}}}\\1", line)), encoding="utf-8")
+        print(f"coins.json: {flag} gesetzt")
     print("Fertig. Danach: node tools/validate.mjs")
 
 

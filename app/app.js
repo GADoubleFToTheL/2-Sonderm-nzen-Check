@@ -108,7 +108,7 @@
         : null;
     return {
       id: c.id, c: c.c, y: c.y, m: c.m || 0, t: c.t, units, k: c.k || 2,
-      g: c.g === 1, u: c.u === 1, custom: c.custom === true, img: c.i === 1,
+      g: c.g === 1, u: c.u === 1, custom: c.custom === true, img: c.i === 1, img2: c.i === 1 && c.b === 1,
       flag: country.f, countryName: country.n,
       when: c.k === 1 ? `ab ${c.y}` : month ? `${month} ${c.y}` : String(c.y),
       search: norm([country.n, c.c, c.y, month, c.t, c.g === 1 ? 'gemeinschaftsausgabe gemeinsame' : '',
@@ -504,15 +504,20 @@
       else b.append(el('b', null, c.k === 1 ? '€' : `${c.k} €`), el('span', 'flag-badge', c.flag));   // Wert-Kachel in der Farbe der Münzart
       return b;
     }
-    const pic = el('img');
-    pic.src = `img/t/${c.id}.webp`;
-    pic.alt = '';
-    pic.width = 54;
-    pic.height = 54;
-    pic.loading = 'lazy';
-    pic.decoding = 'async';
-    pic.addEventListener('error', retryImage);
-    b.append(pic, el('span', 'flag-badge', c.flag));
+    // 25 €: beide Seiten nebeneinander, die zweite leicht dahinter.
+    if (c.img2) b.classList.add('pair');
+    for (const file of c.img2 ? [c.id, `${c.id}_2`] : [c.id]) {
+      const pic = el('img');
+      pic.src = `img/t/${file}.webp`;
+      pic.alt = '';
+      pic.width = 54;
+      pic.height = 54;
+      pic.loading = 'lazy';
+      pic.decoding = 'async';
+      pic.addEventListener('error', retryImage);
+      b.append(pic);
+    }
+    b.append(el('span', 'flag-badge', c.flag));
     return b;
   }
 
@@ -1058,14 +1063,18 @@
   }
 
   const zoomDlg = $('#zoomDlg');
-  $('#zoomImg').addEventListener('error', retryImage);
+  for (const img of document.querySelectorAll('#zoomPics img')) img.addEventListener('error', retryImage);
   let detailFor = '';
   async function openDetail(c) {
     detailFor = c.id;
-    const img = $('#zoomImg');
+    const img = $('#zoomImg'), img2 = $('#zoomImg2');
     img.hidden = !c.img;
+    img2.hidden = !c.img2;
+    $('#zoomPics').classList.toggle('two', c.img2);
     delete img.dataset.retried;
+    delete img2.dataset.retried;
     if (c.img) { img.alt = c.t; img.src = `img/l/${c.id}.webp`; } else img.removeAttribute('src');
+    if (c.img2) { img2.alt = `${c.t} – andere Seite`; img2.src = `img/l/${c.id}_2.webp`; } else img2.removeAttribute('src');
     const tile = $('#zoomTile');
     tile.hidden = c.img;
     if (!c.img) {
@@ -1098,7 +1107,7 @@
     if (c) openDetail(c);
   });
   // Antippen des Bildes schließt; Links bleiben bedienbar.
-  zoomDlg.addEventListener('click', (e) => { if (e.target.closest('#zoomImg, #zoomTile')) zoomDlg.close(); });
+  zoomDlg.addEventListener('click', (e) => { if (e.target.closest('#zoomPics img, #zoomTile')) zoomDlg.close(); });
 
   // Nach oben oder unten wischen schließt die Detailansicht. Ist der Text länger als das Fenster,
   // wird erst gescrollt; am oberen bzw. unteren Ende zieht das Wischen das Fenster mit.
@@ -1158,7 +1167,7 @@
 
   // Alle kleinen Münzbilder einmal laden, damit sie auch offline da sind (der Service Worker merkt sie sich).
   $('#imgBtn').addEventListener('click', async () => {
-    const queue = state.coins.filter((c) => c.img).map((c) => c.id);
+    const queue = state.coins.flatMap((c) => c.img2 ? [c.id, `${c.id}_2`] : c.img ? [c.id] : []);
     const total = queue.length;
     let done = 0, failed = 0;
     ui.menu.close();

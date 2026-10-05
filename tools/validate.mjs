@@ -34,7 +34,7 @@ for (const [code, c] of Object.entries(countries)) {
   }
 }
 
-const ALLOWED_KEYS = new Set(['id', 'c', 'y', 'm', 't', 'g', 'u', 'i', 'k']);
+const ALLOWED_KEYS = new Set(['id', 'c', 'y', 'm', 't', 'g', 'u', 'i', 'b', 'k']);
 const KATEGORIEN = new Set([1, 5, 25]); // 'k' fehlt = 2-€-Gedenkmünze; 1 = Kursmünzensatz (1 Cent bis 2 Euro), 5 = 5-€-Kupfermünze, 25 = 25-€-Silber-Niob-Münze
 const imgDir = join(dirname(file), '..', 'img');
 const maxYear = new Date().getFullYear() + 1;
@@ -62,12 +62,16 @@ for (const c of data.coins ?? []) {
   if (Number(c.id.slice(3, 7)) !== c.y) err(`${label}: ID passt nicht zum Jahr ${c.y}.`);
   if (c.m !== undefined && !(Number.isInteger(c.m) && c.m >= 1 && c.m <= 12)) err(`${label}: Monat muss 1–12 sein.`);
   if (typeof c.t !== 'string' || !c.t.trim() || c.t.length > 140) err(`${label}: Titel fehlt oder ist zu lang.`);
-  for (const f of ['g', 'u', 'i']) if (c[f] !== undefined && c[f] !== 1) err(`${label}: „${f}“ darf nur 1 sein.`);
+  for (const f of ['g', 'u', 'i', 'b']) if (c[f] !== undefined && c[f] !== 1) err(`${label}: „${f}“ darf nur 1 sein.`);
   // Münzbild: i = 1 setzt voraus, dass beide Dateien da sind (klein: img/t, groß: img/l).
   const hasFiles = existsSync(join(imgDir, 't', `${c.id}.webp`)) && existsSync(join(imgDir, 'l', `${c.id}.webp`));
   if (c.i === 1 && !hasFiles) err(`${label}: „i“ ist gesetzt, aber die Bilddateien fehlen (img/t und img/l).`);
   if (c.i !== 1 && hasFiles) warn(`${label}: Bilddateien vorhanden, aber „i“ fehlt – Bild wird nicht angezeigt.`);
   if (c.i === 1) withImg++;
+  // Zweite Münzseite (25 €): b = 1 braucht zusätzlich <ID>_2.webp in img/t und img/l.
+  const hasSide2 = existsSync(join(imgDir, 't', `${c.id}_2.webp`)) && existsSync(join(imgDir, 'l', `${c.id}_2.webp`));
+  if (c.b === 1 && (c.i !== 1 || !hasSide2)) err(`${label}: „b“ ist gesetzt, aber „i“ oder die Bilddateien der zweiten Seite fehlen (img/t und img/l, ${c.id}_2.webp).`);
+  if (c.b !== 1 && hasSide2) warn(`${label}: Bild der zweiten Seite vorhanden, aber „b“ fehlt – wird nicht angezeigt.`);
 
   byYear.set(c.y, (byYear.get(c.y) ?? 0) + 1);
   byCountry.set(c.c, (byCountry.get(c.c) ?? 0) + 1);
