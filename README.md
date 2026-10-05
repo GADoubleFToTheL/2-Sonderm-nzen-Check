@@ -132,11 +132,9 @@ Wird ein Land neu aufgenommen (z. B. Bulgarien, sobald es eine Gedenkmünze gibt
 - **5 € Kupfer (32 Münzen) und 25 € Silber-Niob (24 Münzen):** Alle österreichischen Ausgaben seit der ersten
   5-€-Kupfermünze (Ausgabe 14.12.2011, Jahrgang 2012) bzw. seit 2003 (25 €). Quelle für Titel, Jahrgang und
   Ausgabedatum: die Übersichten auf geldmarie.at, abgeglichen mit dem Katalog der Münze Österreich
-  (muenzeoesterreich.at). **Fotos:** 21 der 24 Silber-Niob-Münzen (2003–2023) haben ein Foto von Wikimedia
-  Commons (frei lizenziert, CC BY-SA, mit Nachweis beim Antippen des Bildes). Ohne Foto sind die 25-€-Münzen
-  2024–2026 und alle 5-€-Kupfermünzen: Die Münze Österreich erlaubt die Verwendung ihrer Bilder nur für den
-  persönlichen Gebrauch (Impressum), eine Veröffentlichung braucht ihre Zustimmung; frei lizenzierte Fotos
-  dieser Münzen gibt es nicht. Dort steht eine Wert-Kachel. Eigene Fotos lassen sich mit
+  (muenzeoesterreich.at). **Fotos:** alle 24 Silber-Niob-Münzen und die 5-€-Kupfermünzen ab 2021 (11 Stück) mit
+  Bildern des IMM Münz-Instituts (siehe unten). Die übrigen 21 Kupfermünzen (2012–2020, Janus 2021, Demokratie
+  2022, Bienentanz 2023) führt das IMM nur als Silberausgabe; sie zeigen eine Wert-Kachel. Eigene Fotos lassen sich mit
   `tools/make-image.py` einbinden (bei fremden Fotos Eintrag in `app/data/credits.json` nicht vergessen). **Nicht enthalten**: 10-€-Kupfermünzen, Silber-/Goldmünzen, die
   Neujahrsmünze 2027 (Ausgabe 2.12.2026).
 - **Kursmünzensätze (39 Sätze, 312 Münzen):** Je Land und Motivserie, abgeglichen mit den Länderseiten der EZB
@@ -151,14 +149,17 @@ Wird ein Land neu aufgenommen (z. B. Bulgarien, sobald es eine Gedenkmünze gibt
   haben ebenfalls Varianten (z. B. Münzmeisterzeichen), die noch nicht unterschieden werden.
 - Fehlt dir trotzdem eine Münze, kannst du sie in der App über *Menü → Fehlende Münze hinzufügen* ergänzen.
 
-**Fotos der 25-€-Münzen (Wikimedia Commons):** Aufnahmen von NobbiP (2003, 2005–2014) und KenzoMogi (2004,
-2015–2023), lizenziert unter CC BY-SA 3.0 bzw. 4.0. Die Bilder in der App sind verkleinert und rund
-ausgeschnitten und stehen deshalb ebenfalls unter CC BY-SA. Die genauen Dateinamen und Lizenzen je Münze stehen
-in `app/data/credits.json`; die App zeigt sie beim Vergrößern des Bildes samt Link.
+**Bilder des IMM Münz-Instituts (imm-muenze.at):** 274 Münzen (alle 25 €, 11 × 5 € Kupfer, 239 × 2 €). Das IMM
+hat die Nutzung am 05.10.2026 per E-Mail erlaubt, unter diesen Bedingungen: Bilder verkleinert verwenden, Quelle
+genau so angeben: „Quelle: IMM Münz-Institut, Institut für Münz- und Medaillenkunst GmbH (abgerufen am
+05.10.2026)“, und der Firmenname verlinkt auf die Produktseite der Münze. Die Produktseite je Münze steht in
+`app/data/credits.json` (`{"q": "imm", "u": Produktseite, "d": Abrufdatum}`); die App zeigt die Quelle samt Link in
+der Detailansicht. Die Anfrage nannte 25 € Silber-Niob, 5 € Kupfer und die 2-€-Gedenkmünzen 2026; die Bilder der
+2-€-Münzen 2004–2025 sind nach Verständnis des Besitzers ebenfalls von der Erlaubnis gedeckt. Die Bilder behalten
+ihren natürlichen Umriss (siebeneckige 5-€-Münzen). Deutsche Münzen zeigen die Prägestätte J.
 
-**Quellen der Münzbilder (2 €):** Europäische Zentralbank (ecb.europa.eu, verkleinert und rund zugeschnitten) und
-Europäische Kommission (economy-finance.ec.europa.eu) für Monaco „Carladès“ sowie Vatikan 2024/2025. Die
-Münzmotive gehören den jeweiligen Ausgabeländern.
+**Übrige Münzbilder (2 €, Sätze):** Europäische Zentralbank (ecb.europa.eu, verkleinert und rund zugeschnitten) und
+Europäische Kommission (economy-finance.ec.europa.eu). Die Münzmotive gehören den jeweiligen Ausgabeländern.
 
 ## Entwicklung
 

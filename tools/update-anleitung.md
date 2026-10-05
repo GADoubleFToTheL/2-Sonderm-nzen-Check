@@ -27,8 +27,16 @@ Münze Österreich (`https://www.muenzeoesterreich.at/sammeln/euro-muenzen/5-eur
 erscheinen im Dezember davor, dann ohne `m`). Normalerweise erscheinen zwei 5-€-Kupfermünzen pro Jahr (Neujahrs- und
 Ostermünze, gelegentlich eine dritte) und eine 25-€-Silber-Niob-Münze. Nur bereits **ausgegebene** Münzen eintragen
 (Ausgabedatum erreicht). 10-€-Kupfermünzen, Silber- und Goldmünzen gehören nicht in die Liste. **Fotos:** Bilder
-der Münze Österreich dürfen nicht verwendet werden (nur persönlicher Gebrauch laut Impressum). Erlaubt sind frei
-lizenzierte Fotos von Wikimedia Commons (CC BY, CC BY-SA oder CC0; Autor und Lizenz auf der Dateiseite prüfen,
+des **IMM Münz-Instituts** (www.imm-muenze.at) sind erlaubt (E-Mail vom 05.10.2026) für 5 € Kupfer, 25 €
+Silber-Niob und 2-€-Gedenkmünzen. Bedingungen: verkleinert (macht `tools/make-image.py`), Eintrag in
+`app/data/credits.json` als `{"q": "imm", "u": "<Produktseite der Münze>", "d": "<Abrufdatum TT.MM.JJJJ>"}`; die App
+zeigt daraus „Quelle: IMM Münz-Institut, Institut für Münz- und Medaillenkunst GmbH (abgerufen am …)“ mit Link.
+Produktseiten über `https://www.imm-muenze.at/sitemap-product-0.xml`; die Shop-Seiten enthalten die Daten im Block
+`__NUXT_DATA__`, die Bilder liegen bei `cdn.shopify.com` (freigestellte PNGs; `make-image.py` behält dann den
+natürlichen Umriss). Bei 5 € nur das Bild der **Kupferausgabe** nehmen, nicht die Silberausgabe; Bild immer mit dem
+Motiv vergleichen (Titel im Shop sind nicht immer richtig). Keine anderen IMM-Bilder (10 €, Silber, Gold, Sets).
+Bilder der Münze Österreich selbst dürfen nicht verwendet werden (nur persönlicher Gebrauch laut Impressum). Erlaubt
+sind außerdem frei lizenzierte Fotos von Wikimedia Commons (CC BY, CC BY-SA oder CC0; Autor und Lizenz auf der Dateiseite prüfen,
 Kategorie „Euro coins (25 euro)“ bzw. „Commemorative Euro coins of Austria“). Dann Eintrag in
 `app/data/credits.json` (`{"a": Autor, "l": "CC BY-SA 4.0", "f": "Dateiname.jpg"}`) und Bild mit
 `tools/make-image.py` erzeugen; `node tools/validate.mjs` meldet fehlende Nachweise als Fehler. Ohne freies Foto

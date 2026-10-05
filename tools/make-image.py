@@ -5,7 +5,8 @@
 
 Erzeugt app/img/t/<ID>.webp (klein, für die Liste) und app/img/l/<ID>.webp (groß, für die
 Vergrößerung), jeweils rund ausgeschnitten, und setzt in app/data/coins.json bei dieser Münze
-"i": 1, damit die App das Bild anzeigt.
+"i": 1, damit die App das Bild anzeigt. Freigestellte Bilder (PNG/WebP mit durchsichtigem Hintergrund,
+z. B. vom IMM) behalten ihren natürlichen Umriss, damit siebeneckige 5-€-Münzen nicht beschnitten werden.
 
 Quadratische Münzfotos werden unverändert verkleinert, Querformat-Bilder (z. B. 3:2-Renderings der
 EU-Kommission) in der Mitte quadratisch ausgeschnitten, alles andere mit Weiß aufgefüllt.
@@ -57,10 +58,21 @@ def main() -> None:
     if line is None:
         sys.exit(f"{coin_id} steht nicht in app/data/coins.json – erst die Münze eintragen.")
 
-    im = square(Image.open(src).convert("RGB"))
+    raw = Image.open(src)
+    alpha = raw.convert("RGBA").getchannel("A")
+    cut_out = alpha.getextrema()[0] < 250   # durchsichtiger Hintergrund vorhanden
+    if cut_out:
+        rgba = raw.convert("RGBA")
+        rgba = rgba.crop(alpha.point(lambda a: 255 if a > 8 else 0).getbbox())
+        s = max(rgba.size)
+        im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+        im.paste(rgba, ((s - rgba.width) // 2, (s - rgba.height) // 2))
+    else:
+        im = square(raw.convert("RGB"))
     for size, folder, quality in SIZES:
         out = im.resize((size, size), Image.LANCZOS).convert("RGBA")
-        out.putalpha(circle_mask(size))
+        if not cut_out:
+            out.putalpha(circle_mask(size))
         target = ROOT / "img" / folder / f"{coin_id}.webp"
         target.parent.mkdir(parents=True, exist_ok=True)
         out.save(target, "WEBP", quality=quality, method=4)
