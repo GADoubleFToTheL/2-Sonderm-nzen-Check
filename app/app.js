@@ -484,6 +484,15 @@
     return meta;
   }
 
+  // Lädt ein Münzbild nicht (z. B. veralteter Zwischenspeicher nach einem Adresswechsel), einmal frisch
+  // vom Server holen: der Zusatz ?r=… geht an Browser-, Service-Worker- und CDN-Zwischenspeicher vorbei.
+  function retryImage(e) {
+    const img = e.target;
+    if (img.dataset.retried || !img.getAttribute('src')) return;
+    img.dataset.retried = '1';
+    setTimeout(() => { img.src = `${img.getAttribute('src').split('?')[0]}?r=${Date.now()}`; }, 400);
+  }
+
   // Rundes Münzbild (antippen = Details); ohne Bild die Landesflagge bzw. eine Wert-Kachel.
   function medalFor(c) {
     const b = el('button', c.img ? 'medal img' : c.k === 2 ? 'medal' : `medal denom d${c.k}`);
@@ -502,6 +511,7 @@
     pic.height = 54;
     pic.loading = 'lazy';
     pic.decoding = 'async';
+    pic.addEventListener('error', retryImage);
     b.append(pic, el('span', 'flag-badge', c.flag));
     return b;
   }
@@ -1048,11 +1058,13 @@
   }
 
   const zoomDlg = $('#zoomDlg');
+  $('#zoomImg').addEventListener('error', retryImage);
   let detailFor = '';
   async function openDetail(c) {
     detailFor = c.id;
     const img = $('#zoomImg');
     img.hidden = !c.img;
+    delete img.dataset.retried;
     if (c.img) { img.alt = c.t; img.src = `img/l/${c.id}.webp`; } else img.removeAttribute('src');
     const tile = $('#zoomTile');
     tile.hidden = c.img;
