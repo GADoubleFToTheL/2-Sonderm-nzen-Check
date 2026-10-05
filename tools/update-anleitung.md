@@ -35,6 +35,9 @@ Produktseiten über `https://www.imm-muenze.at/sitemap-product-0.xml`; die Shop-
 `__NUXT_DATA__`, die Bilder liegen bei `cdn.shopify.com` (freigestellte PNGs; `make-image.py` behält dann den
 natürlichen Umriss). Bei 5 € nur das Bild der **Kupferausgabe** nehmen, nicht die Silberausgabe; Bild immer mit dem
 Motiv vergleichen (Titel im Shop sind nicht immer richtig). Keine anderen IMM-Bilder (10 €, Silber, Gold, Sets).
+Bei **25 €** beide Seiten aus dem Shop nehmen (Bilder `…_VS.png` und `…_RS.png` der Produktseite): zuerst die
+Motivseite mit dem Titel (`python3 tools/make-image.py seite1.png <ID>`), dann die andere Seite mit
+`python3 tools/make-image.py seite2.png <ID> --seite2` (setzt `"b": 1`).
 Bilder der Münze Österreich selbst dürfen nicht verwendet werden (nur persönlicher Gebrauch laut Impressum). Erlaubt
 sind außerdem frei lizenzierte Fotos von Wikimedia Commons (CC BY, CC BY-SA oder CC0; Autor und Lizenz auf der Dateiseite prüfen,
 Kategorie „Euro coins (25 euro)“ bzw. „Commemorative Euro coins of Austria“). Dann Eintrag in

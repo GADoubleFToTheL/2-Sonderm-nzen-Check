@@ -95,6 +95,7 @@ Die ganze Münzliste steht in **`app/data/coins.json`** – eine Münze pro Zeil
 | `m` | Ausgabemonat (1–12), optional |
 | `u` | `1` = Angaben noch nicht bestätigt (wird in der App als „ungeprüft“ angezeigt) |
 | `i` | `1` = es gibt ein Münzbild (siehe unten) |
+| `b` | `1` = es gibt zusätzlich ein Bild der anderen Münzseite (bei allen 25 €); die App zeigt beide Seiten nebeneinander |
 | `k` | Münzart: fehlt = 2 €, `1` = Kursmünzensatz (8 Münzen, ID mit `-satz`, `y` = erstes Jahr der Serie), `5` = 5-€-Kupfermünze, `25` = 25-€-Silber-Niob-Münze. Die ID enthält dann die Münzart, z. B. `AT-2012-5-musikverein`. `y` ist der Jahrgang auf der Münze; `m` nur, wenn das Ausgabejahr gleich dem Jahrgang ist (Neujahrsmünzen erscheinen im Dezember davor). |
 
 **Prägestätten:** Bei einem Land mit Prägestätten steht unter `countries` zusätzlich `"mm"`, z. B. bei Deutschland
@@ -109,6 +110,13 @@ auch `"i": 1`:
 ```bash
 pip install pillow
 python3 tools/make-image.py FOTO.jpg DE-2026-hb
+```
+
+Die andere Münzseite (bei den 25 €, beide Seiten tragen ein Motiv) kommt als `<ID>_2.webp` in dieselben Ordner;
+`--seite2` erzeugt sie und setzt `"b": 1`:
+
+```bash
+python3 tools/make-image.py RUECKSEITE.png AT-2026-25-quanten --seite2
 ```
 
 Nach dem Eintragen zusätzlich `"updated"` (Datum) oben in der Datei anpassen und `node tools/validate.mjs`
@@ -158,7 +166,8 @@ genau so angeben: „Quelle: IMM Münz-Institut, Institut für Münz- und Medail
 `app/data/credits.json` (`{"q": "imm", "u": Produktseite, "d": Abrufdatum}`); die App zeigt die Quelle samt Link in
 der Detailansicht. Die Anfrage nannte 25 € Silber-Niob, 5 € Kupfer und die 2-€-Gedenkmünzen 2026; die Bilder der
 2-€-Münzen 2004–2025 sind nach Verständnis des Besitzers ebenfalls von der Erlaubnis gedeckt. Die Bilder behalten
-ihren natürlichen Umriss (siebeneckige 5-€-Münzen). Deutsche Münzen zeigen die Prägestätte J.
+ihren natürlichen Umriss (siebeneckige 5-€-Münzen). Deutsche Münzen zeigen die Prägestätte J. Bei den 25 € sind
+beide Münzseiten aus dem IMM-Shop dabei (Liste und Detailansicht zeigen sie nebeneinander).
 
 **Übrige Münzbilder (2 €, Sätze):** Europäische Zentralbank (ecb.europa.eu, verkleinert und rund zugeschnitten) und
 Europäische Kommission (economy-finance.ec.europa.eu). Die Münzmotive gehören den jeweiligen Ausgabeländern.

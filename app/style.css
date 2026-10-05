@@ -372,6 +372,14 @@ button.medal { border: 0; padding: 0; font-family: inherit; color: inherit; curs
   display: block; width: 100%; height: 100%; border-radius: 50%;
   filter: grayscale(.9) opacity(.62); transition: filter .2s;
 }
+/* 25 €: zweite Seite rechts daneben, leicht dahinter */
+.medal.img.pair { width: 94px; border-radius: 27px; box-shadow: none; }
+.medal.img.pair img {
+  position: absolute; top: 0; width: 54px; height: 54px;
+  box-shadow: 0 0 0 1px var(--border-strong), 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+.medal.img.pair img:first-child { left: 0; z-index: 1; }
+.medal.img.pair img:nth-child(2) { right: 0; }
 .medal .flag-badge {
   position: absolute; right: -4px; bottom: -4px;
   font-size: 15px; line-height: 1; filter: drop-shadow(0 0 2px rgba(0, 0, 0, .8));
@@ -557,6 +565,9 @@ dialog.zoom.dragging { transition: none; }
 dialog.zoom.settle { transition: transform 0.18s var(--ease-out), opacity 0.18s var(--ease-out); }
 dialog.zoom .grip { display: block; width: 44px; height: 5px; margin: 0 auto 12px; border-radius: 99px; background: var(--border-strong); }
 dialog.zoom img { display: block; width: min(100%, 300px, 36vh); height: auto; aspect-ratio: 1; margin: 0 auto 8px; cursor: zoom-out; }
+/* 25 €: beide Seiten nebeneinander */
+.zpics.two { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
+.zpics.two img { width: min(calc(50% - 4px), 300px, 40vh); margin: 0; }
 .ztile { display: grid; place-items: center; margin: 4px 0 10px; }
 .ztile .medal { width: 96px; height: 96px; font-size: 44px; filter: none; cursor: default; }
 .ztile .medal.denom b { font-size: 24px; }
