@@ -1,6 +1,6 @@
 // Network-first: online gibt es immer die neueste App und Münzliste,
 // offline wird auf den zuletzt gespeicherten Stand zurückgegriffen.
-const CACHE = 'euro2-v12';
+const CACHE = 'euro2-v13';
 const SHELL = [
   './', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'data/coins.json', 'data/credits.json', 'data/numista.json', 'data/details.json',
@@ -30,7 +30,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE);
       const hit = await cache.match(req);
-      const refresh = fetch(req).then((res) => { if (res.ok) cache.put(req, res.clone()); return res; }).catch(() => undefined);
+      // „no-cache“: beim Server nachfragen statt einer veralteten Antwort aus dem Browser-Zwischenspeicher.
+      const refresh = fetch(req, { cache: 'no-cache' })
+        .then((res) => { if (res.ok) cache.put(req, res.clone()); return res; })
+        .catch(() => undefined);
       if (hit) { event.waitUntil(refresh); return hit; }
       return (await refresh) || Response.error();
     })());
