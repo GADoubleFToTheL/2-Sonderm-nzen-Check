@@ -89,9 +89,13 @@ for (const [k, n] of perCountryYear) {
 // ein Foto aus dieser Quelle stammt. Alle Fotos der Münzarten 5 € und 25 € kommen von dort.
 let credits = {};
 try { credits = JSON.parse(readFileSync(join(dirname(file), 'credits.json'), 'utf8')); } catch { err('data/credits.json fehlt oder ist kein gültiges JSON.'); }
+// Zwei Arten: IMM-Bilder ({"q": "imm", "u": Produktseite, "d": Abrufdatum}) und Wikimedia-Fotos (Autor, Lizenz, Datei).
 for (const [id, c] of Object.entries(credits)) {
   if (!ids.has(id)) err(`credits.json: „${id}“ ist keine Münze in coins.json.`);
-  if (!c?.a || !c?.f || !/^CC (BY|BY-SA) \d\.\d$/.test(c?.l ?? '')) err(`credits.json: „${id}“ braucht Autor „a“, Datei „f“ und freie Lizenz „l“ (z. B. „CC BY-SA 4.0“).`);
+  if (c?.q === 'imm') {
+    if (!/^https:\/\/www\.imm-muenze\.at\/./.test(c.u ?? '') || !/^\d{2}\.\d{2}\.\d{4}$/.test(c.d ?? '')) err(`credits.json: „${id}“ (IMM) braucht die Produktseite „u“ (https://www.imm-muenze.at/…) und das Abrufdatum „d“ (TT.MM.JJJJ).`);
+  } else if (!c?.a || !c?.f || !/^CC (BY|BY-SA) \d\.\d$/.test(c?.l ?? '')) err(`credits.json: „${id}“ braucht Autor „a“, Datei „f“ und freie Lizenz „l“ (z. B. „CC BY-SA 4.0“).`);
+  if (!data.coins.find((x) => x.id === id)?.i) warn(`credits.json: „${id}“ hat einen Nachweis, aber kein Bild („i“ fehlt).`);
 }
 for (const c of data.coins) if ((c.k === 5 || c.k === 25) && c.i === 1 && !credits[c.id]) err(`${c.id}: Foto ohne Eintrag in credits.json (Quellenangabe fehlt).`);
 

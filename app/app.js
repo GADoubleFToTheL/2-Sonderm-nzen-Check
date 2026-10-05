@@ -117,12 +117,18 @@
   }
 
   // Quellenangabe für ein Foto (CC BY-SA verlangt Urheber, Lizenz und Hinweis auf Bearbeitung).
+  // IMM-Bilder (Erlaubnis vom 05.10.2026): Quelle genau so nennen und auf die Produktseite verlinken.
   function creditNode(id) {
     const c = state.credits[id];
     if (!c) return null;
-    const lic = /^CC BY-SA (\d\.\d)$/.exec(c.l);
     const link = (href, text) => Object.assign(el('a', null, text), { href, target: '_blank', rel: 'noopener' });
     const p = el('p', 'muted small');
+    if (c.q === 'imm') {
+      p.append('Quelle: ', link(c.u, 'IMM Münz-Institut, Institut für Münz- und Medaillenkunst GmbH'),
+        ` (abgerufen am ${c.d}) · verkleinert`);
+      return p;
+    }
+    const lic = /^CC BY-SA (\d\.\d)$/.exec(c.l);
     p.append('Foto: ',
       link(`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(c.f.replace(/ /g, '_'))}`, c.a),
       ' · ',
